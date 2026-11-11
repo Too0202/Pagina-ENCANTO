@@ -1,0 +1,55 @@
+{
+  "updatedAt": "2026-11-11T21:00:00.000Z",
+  "products": [
+    {
+      "id": "crema-hidratante",
+      "name": "Crema hidratante facial",
+      "category": "Rostro",
+      "price": 45000,
+      "image": "",
+      "supplierUrl": "https://TU-PROVEEDOR.com/producto/crema-hidratante",
+      "available": true,
+      "lastChecked": null
+    },
+    {
+      "id": "serum-vitamina-c",
+      "name": "Sérum de vitamina C",
+      "category": "Rostro",
+      "price": 62000,
+      "image": "",
+      "supplierUrl": "https://TU-PROVEEDOR.com/producto/serum-vitamina-c",
+      "available": true,
+      "lastChecked": null
+    },
+    {
+      "id": "labial-mate-rosa",
+      "name": "Labial mate rosa",
+      "category": "Maquillaje",
+      "price": 28000,
+      "image": "",
+      "supplierUrl": "https://TU-PROVEEDOR.com/producto/labial-mate-rosa",
+      "available": true,
+      "lastChecked": null
+    },
+    {
+      "id": "mascara-pestanas",
+      "name": "Máscara de pestañas",
+      "category": "Maquillaje",
+      "price": 35000,
+      "image": "",
+      "supplierUrl": "https://TU-PROVEEDOR.com/producto/mascara-pestanas",
+      "available": false,
+      "lastChecked": null
+    },
+    {
+      "id": "shampoo-keratina",
+      "name": "Shampoo con keratina",
+      "category": "Cabello",
+      "price": 38000,
+      "image": "",
+      "supplierUrl": "https://TU-PROVEEDOR.com/producto/shampoo-keratina",
+      "available": true,
+      "lastChecked": null
+    }
+  ]
+}

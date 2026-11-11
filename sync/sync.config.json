@@ -1,0 +1,22 @@
+{
+  "timeoutMs": 15000,
+  "delayMs": 1500,
+  "userAgent": "Mozilla/5.0 (compatible; RevisorDeStock/1.0)",
+  "soldOutPhrases": [
+    "agotado",
+    "sin stock",
+    "sin existencias",
+    "no disponible",
+    "producto no disponible",
+    "out of stock",
+    "sold out",
+    "temporalmente agotado"
+  ],
+  "inStockPhrases": [
+    "añadir al carrito",
+    "agregar al carrito",
+    "comprar ahora",
+    "add to cart",
+    "buy now"
+  ]
+}

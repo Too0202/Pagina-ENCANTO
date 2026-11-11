@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tienda de cosméticos</title>
+  <meta name="description" content="Productos cosméticos seleccionados para ti.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap top-inner">
+      <a class="brand" href="./" id="brand">Tienda</a>
+      <a class="btn btn-ghost" id="wa-header" target="_blank" rel="noopener">Escríbenos</a>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap">
+      <h1 id="hero-title">Belleza que se nota</h1>
+      <p id="hero-sub">Productos seleccionados, con disponibilidad actualizada.</p>
+    </div>
+  </section>
+
+  <main class="wrap">
+    <div class="tools">
+      <label class="field">
+        <span>Buscar</span>
+        <input id="q" type="search" placeholder="Ej. crema, labial, sérum" autocomplete="off">
+      </label>
+      <div class="chips" id="chips" role="group" aria-label="Categorías"></div>
+    </div>
+
+    <p class="meta" id="meta" aria-live="polite"></p>
+    <div class="grid" id="grid"></div>
+
+    <div class="empty" id="empty" hidden>
+      <h2>No encontramos productos</h2>
+      <p>Prueba con otra palabra o elige otra categoría.</p>
+      <button class="btn" id="clear" type="button">Ver todos los productos</button>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap"><span id="updated"></span></div>
+  </footer>
+
+  <script src="site.config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
