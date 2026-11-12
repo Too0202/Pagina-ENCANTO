@@ -6,9 +6,12 @@
     "maxPages": 20
   },
   "categories": [
-    { "id": 1, "name": "Cejas" }
+    {
+      "id": 1,
+      "name": "Cejas"
+    }
   ],
-  "soldOutWhenQuantityAtOrBelow": 0,
+  "soldOutWhenQuantityAtOrBelow": null,
   "missesToMarkSoldOut": 2,
   "timeoutMs": 20000,
   "delayMs": 1000
