@@ -1,4 +1,6 @@
 {
+  "catalogUrls": [],
+  "missesToMarkSoldOut": 2,
   "timeoutMs": 15000,
   "delayMs": 1500,
   "userAgent": "Mozilla/5.0 (compatible; RevisorDeStock/1.0)",

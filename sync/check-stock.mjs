@@ -98,19 +98,107 @@ async function fetchPage(url) {
   }
 }
 
+// ---------- Modo catálogo ----------
+// Para proveedores sin página individual por producto: se busca el producto por su nombre
+// (campo "supplierName" en products.json) dentro de las páginas de listado (config.catalogUrls).
+
+const norm = (s) =>
+  s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+
+// Divide el HTML en "tarjetas" (class="card ...", típico de Bootstrap) y devuelve el texto de cada una.
+function splitCards(html) {
+  const parts = html.split(/<div[^>]+class=["'][^"']*\bcard\b(?!-)[^"']*["'][^>]*>/i);
+  return parts.slice(1).map((chunk) => norm(stripTags(chunk)));
+}
+
+async function loadCatalog() {
+  const urls = config.catalogUrls || [];
+  const cat = { cards: [], text: "", okPages: 0, totalPages: urls.length };
+  const texts = [];
+  for (const url of urls) {
+    try {
+      const { res, html } = await fetchPage(url);
+      if (res.status >= 400) {
+        console.log(`Catálogo ${url}: HTTP ${res.status} (se ignora esta vez)`);
+      } else {
+        cat.okPages++;
+        texts.push(norm(stripTags(html)));
+        cat.cards.push(...splitCards(html));
+      }
+    } catch (err) {
+      console.log(`Catálogo ${url}: ${err.name === "AbortError" ? "tiempo agotado" : err.message}`);
+    }
+    await sleep(config.delayMs);
+  }
+  cat.text = texts.join(" ");
+  return cat;
+}
+
+function findInCatalog(p, cat) {
+  const name = norm(p.supplierName);
+  const card = cat.cards.find((c) => c.includes(name));
+  let scope = card;
+  if (scope === undefined) {
+    // Sin tarjetas detectadas: se mira un pedazo de texto alrededor del nombre.
+    const i = cat.text.indexOf(name);
+    if (i < 0) return { found: false };
+    scope = cat.text.slice(Math.max(0, i - 60), i + name.length + 160);
+  }
+  const soldOut = config.soldOutPhrases.some((ph) => scope.includes(norm(ph)));
+  return soldOut
+    ? { found: true, available: false, reason: "tarjeta con etiqueta de agotado" }
+    : { found: true, available: true, reason: "aparece en el catálogo" };
+}
+
 async function main() {
   const data = JSON.parse(await readFile(productsPath, "utf8"));
   const now = new Date().toISOString();
   let changed = 0;
+  let dirty = false;
+
+  const wantCatalog = data.products.some((p) => p.supplierName);
+  let cat = null;
+  let anyFound = false;
+  if (wantCatalog) {
+    if (!(config.catalogUrls || []).length) {
+      console.log("Aviso: hay productos con supplierName pero sync.config.json no tiene catalogUrls.\n");
+    } else {
+      cat = await loadCatalog();
+      anyFound = data.products.some((p) => p.supplierName && findInCatalog(p, cat).found);
+    }
+  }
+  const needed = config.missesToMarkSoldOut ?? 2;
 
   for (const p of data.products) {
-    if (!p.supplierUrl) continue;
+    if (!p.supplierUrl && !p.supplierName) continue;
     let verdict;
-    try {
-      const { res, html } = await fetchPage(p.supplierUrl);
-      verdict = judge(res, html);
-    } catch (err) {
-      verdict = { available: null, reason: `error de red: ${err.name === "AbortError" ? "tiempo agotado" : err.message}` };
+    if (p.supplierName) {
+      if (!cat || cat.okPages === 0) {
+        verdict = { available: null, reason: "no se pudo leer el catálogo (se conserva el estado anterior)" };
+      } else {
+        const r = findInCatalog(p, cat);
+        if (r.found) {
+          if (p.missCount) { delete p.missCount; dirty = true; }
+          verdict = r;
+        } else if (cat.okPages < cat.totalPages) {
+          verdict = { available: null, reason: "falta una página del catálogo; no se puede asegurar que ya no esté" };
+        } else if (!anyFound) {
+          verdict = { available: null, reason: "ningún producto aparece en el catálogo: ¿la página cambió o carga con JavaScript?" };
+        } else {
+          p.missCount = (p.missCount || 0) + 1;
+          dirty = true;
+          verdict = p.missCount >= needed
+            ? { available: false, reason: "ya no aparece en el catálogo" }
+            : { available: null, reason: `no apareció en el catálogo (aviso ${p.missCount} de ${needed})` };
+        }
+      }
+    } else {
+      try {
+        const { res, html } = await fetchPage(p.supplierUrl);
+        verdict = judge(res, html);
+      } catch (err) {
+        verdict = { available: null, reason: `error de red: ${err.name === "AbortError" ? "tiempo agotado" : err.message}` };
+      }
     }
 
     const before = p.available;
@@ -122,12 +210,12 @@ async function main() {
     const flip = verdict.available !== null && before !== p.available ? "  <- CAMBIÓ" : "";
     if (flip) changed++;
     console.log(`[${mark.padEnd(7)}] ${p.name} — ${verdict.reason}${flip}`);
-    await sleep(config.delayMs);
+    if (!p.supplierName) await sleep(config.delayMs);
   }
 
   // Solo se reescribe el archivo si algo cambió, para no llenar el historial de commits vacíos.
-  if (changed > 0) {
-    data.updatedAt = now;
+  if (changed > 0 || dirty) {
+    if (changed > 0) data.updatedAt = now;
     await writeFile(productsPath, JSON.stringify(data, null, 2) + "\n");
   }
   console.log(`\nListo. Productos que cambiaron: ${changed}`);
