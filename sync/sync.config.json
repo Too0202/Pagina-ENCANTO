@@ -9,6 +9,10 @@
     {
       "id": 1,
       "name": "Cejas"
+    },
+    {
+      "id": 2,
+      "name": "Maquillaje"
     }
   ],
   "soldOutWhenQuantityAtOrBelow": null,
