@@ -44,6 +44,17 @@
       "image": "https://sysvariedades.com.co/sistema/public/images/uploads/products/1783443514_acf212210afb5e5b0d8c.jpg?v=1794500212289",
       "available": true,
       "lastChecked": null
+    },
+    {
+      "id": "p8",
+      "supplierId": "8",
+      "supplierName": "Aceite Bronceador X 160Ml  Piel De Oro",
+      "name": "Aceite Bronceador X 160Ml  Piel De Oro",
+      "category": "Cuidado Corporal",
+      "price": 45000,
+      "image": "https://sysvariedades.com.co/sistema/public/images/uploads/products/8537.jpg?v=1794526766118",
+      "available": true,
+      "lastChecked": null
     }
   ]
 }
