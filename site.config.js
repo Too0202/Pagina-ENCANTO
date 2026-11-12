@@ -1,11 +1,11 @@
 // Configuración de tu tienda. Edita solo este archivo para personalizarla.
 window.SITE = {
-  storeName: "Mi Tienda de Cosméticos",
+  storeName: "ENCANTO",
   heroTitle: "Belleza que se nota",
   heroSubtitle: "Productos seleccionados, con disponibilidad actualizada.",
 
   // WhatsApp con indicativo de país y sin + ni espacios. Colombia = 57
-  whatsapp: "573000000000",
+  whatsapp: "573243130431",
 
   // Moneda para mostrar los precios
   currency: "COP",
