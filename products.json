@@ -33,6 +33,17 @@
       "image": "",
       "available": true,
       "lastChecked": null
+    },
+    {
+      "id": "p9000",
+      "supplierId": "9000",
+      "supplierName": "Acondicionador  Linea Profesional Anyeluz x 800ml",
+      "name": "Acondicionador  Linea Profesional Anyeluz x 800ml",
+      "category": "Cuidado Capilar",
+      "price": 80000,
+      "image": "",
+      "available": true,
+      "lastChecked": null
     }
   ]
 }
