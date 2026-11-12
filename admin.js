@@ -45,7 +45,7 @@
   async function gh(path, opts = {}) {
     let res;
     try {
-      res = await fetch(`https://api.github.com/repos/${state.repo}/${path}`, {
+      res = await fetch(`https://api.github.com/repos/${state.repo}${path ? "/" + path : ""}`, {
         cache: "no-store",
         ...opts,
         headers: {
