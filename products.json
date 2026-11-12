@@ -2,41 +2,12 @@
   "updatedAt": "2026-11-11T21:00:00.000Z",
   "products": [
     {
-      "id": "betun-brow-effect-dark",
-      "name": "Betún de cejas Brow Effect Montoc Dark",
+      "id": "p7212",
+      "supplierId": "7212",
       "supplierName": "Betun De Cejas Brow Effect Montoc Dark",
+      "name": "Betún de cejas Brow Effect Montoc Dark",
       "category": "Cejas",
       "price": 17500,
-      "image": "",
-      "available": true,
-      "lastChecked": null
-    },
-    {
-      "id": "betun-brow-effect-light",
-      "name": "Betún de cejas Brow Effect Montoc Light",
-      "supplierName": "Betun De Cejas Brow Effect Montoc Ligth",
-      "category": "Cejas",
-      "price": 17500,
-      "image": "",
-      "available": true,
-      "lastChecked": null
-    },
-    {
-      "id": "betun-engol-uv13",
-      "name": "Betún para cejas Engol UV13",
-      "supplierName": "Betun Para Cejas Engol Uv13",
-      "category": "Cejas",
-      "price": 3000,
-      "image": "",
-      "available": true,
-      "lastChecked": null
-    },
-    {
-      "id": "betun-hudabeauty-70026",
-      "name": "Betún para cejas Hudabeauty 70026",
-      "supplierName": "Betun Para Cejas Hudabeauty 70026",
-      "category": "Cejas",
-      "price": 5000,
       "image": "",
       "available": true,
       "lastChecked": null

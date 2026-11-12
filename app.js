@@ -42,6 +42,7 @@
   function visible() {
     const q = norm(state.q);
     return state.products.filter((p) => {
+      if (p.hidden) return false;
       if (S.hideSoldOut && p.available === false) return false;
       if (state.cat !== "Todos" && p.category !== state.cat) return false;
       if (q && !norm(p.name + " " + p.category).includes(q)) return false;
@@ -57,7 +58,7 @@
   }
 
   function renderChips() {
-    const base = S.hideSoldOut ? state.products.filter((p) => p.available !== false) : state.products;
+    const base = state.products.filter((p) => !p.hidden && !(S.hideSoldOut && p.available === false));
     const cats = ["Todos", ...new Set(base.map((p) => p.category).filter(Boolean))];
     $("chips").innerHTML = cats
       .map((c) => `<button type="button" class="chip" aria-pressed="${c === state.cat}" data-cat="${esc(c)}">${esc(c)}</button>`)
@@ -73,7 +74,7 @@
     $("wa-header").href = `https://wa.me/${S.whatsapp}`;
     if (data.updatedAt) {
       const d = new Date(data.updatedAt);
-      $("updated").textContent = "Disponibilidad revisada el " +
+      $("updated").textContent = "Disponibilidad actualizada el " +
         d.toLocaleString(S.locale || "es-CO", { dateStyle: "long", timeStyle: "short" });
     }
     renderChips();

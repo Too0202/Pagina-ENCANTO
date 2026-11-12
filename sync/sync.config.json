@@ -1,24 +1,15 @@
 {
-  "catalogUrls": [],
-  "missesToMarkSoldOut": 2,
-  "timeoutMs": 15000,
-  "delayMs": 1500,
-  "userAgent": "Mozilla/5.0 (compatible; RevisorDeStock/1.0)",
-  "soldOutPhrases": [
-    "agotado",
-    "sin stock",
-    "sin existencias",
-    "no disponible",
-    "producto no disponible",
-    "out of stock",
-    "sold out",
-    "temporalmente agotado"
+  "supplier": {
+    "name": "Sys Variedades",
+    "loadMoreUrl": "https://sysvariedades.com.co/catalogoenlinea/public/productos/load-more/{id}?limit={limit}&offset={offset}",
+    "pageSize": 800,
+    "maxPages": 20
+  },
+  "categories": [
+    { "id": 1, "name": "Cejas" }
   ],
-  "inStockPhrases": [
-    "añadir al carrito",
-    "agregar al carrito",
-    "comprar ahora",
-    "add to cart",
-    "buy now"
-  ]
+  "soldOutWhenQuantityAtOrBelow": 0,
+  "missesToMarkSoldOut": 2,
+  "timeoutMs": 20000,
+  "delayMs": 1000
 }

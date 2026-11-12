@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Panel de la tienda</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap top-inner">
+      <span class="brand">Panel de la tienda</span>
+      <div class="top-actions" id="top-actions" hidden>
+        <button class="btn btn-ghost" id="btn-reload" type="button">Recargar</button>
+        <button class="btn btn-ghost" id="btn-check" type="button">Revisar proveedor ahora</button>
+        <button class="btn btn-ghost" id="btn-logout" type="button">Cerrar sesión</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+
+    <!-- Entrar -->
+    <section id="login" class="panel" hidden>
+      <h1>Entrar al panel</h1>
+      <p class="muted">Esta página guarda tus cambios en tu repositorio de GitHub. Solo necesitas entrar una vez en cada navegador.</p>
+      <form id="login-form" novalidate>
+        <label class="field">
+          <span>Repositorio de GitHub</span>
+          <input id="in-repo" autocomplete="off" spellcheck="false">
+          <small>Con el formato usuario/nombre-del-repositorio</small>
+        </label>
+        <label class="field">
+          <span>Token de acceso</span>
+          <input id="in-token" type="password" autocomplete="off" spellcheck="false">
+          <small>Es como una contraseña solo para este panel. Se guarda únicamente en este navegador.</small>
+        </label>
+        <p class="error" id="login-error" role="alert" hidden></p>
+        <button class="btn" type="submit">Entrar al panel</button>
+      </form>
+      <details class="help">
+        <summary>¿Cómo consigo el token?</summary>
+        <ol>
+          <li>En GitHub abre <strong>Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token</strong>.</li>
+          <li>En <strong>Repository access</strong> elige "Only select repositories" y marca solo el repositorio de tu tienda.</li>
+          <li>En <strong>Permissions → Repository permissions</strong> pon <strong>Contents: Read and write</strong> y <strong>Actions: Read and write</strong>.</li>
+          <li>Pulsa "Generate token", copia el texto que empieza con <code>github_pat_</code> y pégalo arriba.</li>
+        </ol>
+      </details>
+    </section>
+
+    <!-- Panel -->
+    <section id="app" hidden>
+      <div class="tabs" role="tablist" aria-label="Secciones del panel">
+        <button class="tab" role="tab" id="tab-mine" aria-controls="view-mine" aria-selected="true" type="button">Mis productos</button>
+        <button class="tab" role="tab" id="tab-add" aria-controls="view-add" aria-selected="false" type="button">Agregar del proveedor</button>
+        <button class="tab" role="tab" id="tab-cats" aria-controls="view-cats" aria-selected="false" type="button">Categorías del proveedor</button>
+      </div>
+
+      <div id="view-mine" role="tabpanel" aria-labelledby="tab-mine">
+        <p class="muted" id="mine-summary"></p>
+        <div class="list" id="mine-list"></div>
+        <div class="empty" id="mine-empty" hidden>
+          <h2>Todavía no tienes productos</h2>
+          <p>Elige productos del catálogo del proveedor para empezar a venderlos.</p>
+          <button class="btn" type="button" data-goto="add">Agregar del proveedor</button>
+        </div>
+      </div>
+
+      <div id="view-add" role="tabpanel" aria-labelledby="tab-add" hidden>
+        <div class="filters">
+          <label class="field">
+            <span>Buscar en el catálogo del proveedor</span>
+            <input id="s-q" type="search" autocomplete="off">
+          </label>
+          <label class="field">
+            <span>Categoría</span>
+            <select id="s-cat"></select>
+          </label>
+        </div>
+        <p class="muted" id="add-summary"></p>
+        <div class="list" id="add-list"></div>
+        <div class="empty" id="add-empty" hidden>
+          <h2 id="add-empty-title">Todavía no hay catálogo del proveedor</h2>
+          <p id="add-empty-text">Agrega una categoría y pulsa "Revisar proveedor ahora". En uno o dos minutos aparecen sus productos aquí.</p>
+          <button class="btn" type="button" data-goto="cats">Ir a categorías</button>
+        </div>
+      </div>
+
+      <div id="view-cats" role="tabpanel" aria-labelledby="tab-cats" hidden>
+        <p class="muted">El robot lee estas categorías del proveedor cada 30 minutos y avisa a tu tienda cuando algo se agota.</p>
+        <div class="list" id="cats-list"></div>
+
+        <form class="panel" id="cat-form" novalidate>
+          <h2>Agregar una categoría</h2>
+          <label class="field">
+            <span>Link de la categoría en el proveedor</span>
+            <input id="c-url" autocomplete="off" spellcheck="false">
+            <small>Copia la dirección de la página, por ejemplo https://sysvariedades.com.co/catalogoenlinea/public/products/2</small>
+          </label>
+          <label class="field">
+            <span>Nombre de la categoría (opcional)</span>
+            <input id="c-name" autocomplete="off">
+          </label>
+          <p class="error" id="cat-error" role="alert" hidden></p>
+          <button class="btn" type="submit">Agregar categoría</button>
+        </form>
+
+        <div class="panel">
+          <h2>Cuándo se considera agotado</h2>
+          <p class="muted">Siempre se marca agotado si el proveedor desactiva o elimina el producto, o si deja de aparecer en su catálogo.</p>
+          <label class="check">
+            <input type="checkbox" id="rule-qty">
+            <span>También marcar agotado cuando la cantidad del proveedor sea 0 o menos</span>
+          </label>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Producto: agregar o editar -->
+  <dialog id="dlg" aria-labelledby="dlg-title">
+    <form id="dlg-form" method="dialog" novalidate>
+      <h2 id="dlg-title">Producto</h2>
+      <p class="muted" id="dlg-supplier"></p>
+      <label class="field">
+        <span>Nombre que ven tus clientes</span>
+        <input id="f-name" autocomplete="off">
+        <small class="error" id="e-name" hidden>Escribe un nombre.</small>
+      </label>
+      <label class="field">
+        <span>Categoría en tu tienda</span>
+        <input id="f-cat" list="cat-options" autocomplete="off">
+        <datalist id="cat-options"></datalist>
+      </label>
+      <label class="field">
+        <span>Tu precio de venta</span>
+        <input id="f-price" type="number" inputmode="numeric" min="1" step="1">
+        <small class="error" id="e-price" hidden>Escribe tu precio de venta, mayor que cero.</small>
+      </label>
+      <div class="field">
+        <span>Foto</span>
+        <div class="photo">
+          <img id="f-preview" alt="" hidden>
+          <div class="photo-inputs">
+            <label class="field">
+              <span>Link de la foto</span>
+              <input id="f-image" autocomplete="off" spellcheck="false">
+            </label>
+            <label class="field">
+              <span>O subir una foto desde tu equipo</span>
+              <input id="f-file" type="file" accept="image/*">
+            </label>
+          </div>
+        </div>
+      </div>
+      <label class="check">
+        <input type="checkbox" id="f-hidden">
+        <span>Ocultar de la tienda</span>
+      </label>
+      <p class="error" id="dlg-error" role="alert" hidden></p>
+      <div class="dlg-actions">
+        <button class="btn btn-danger" type="button" id="dlg-remove" hidden>Quitar de la tienda</button>
+        <span class="spacer"></span>
+        <button class="btn btn-ghost" type="button" id="dlg-cancel">Cancelar</button>
+        <button class="btn" type="submit" id="dlg-save">Guardar producto</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="site.config.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
