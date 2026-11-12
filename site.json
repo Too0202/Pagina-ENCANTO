@@ -1,0 +1,13 @@
+{
+  "storeName": "Mi tienda",
+  "logo": "",
+  "brandMode": "name",
+  "heroTitle": "Belleza que se nota",
+  "heroSubtitle": "Productos seleccionados, con disponibilidad actualizada.",
+  "whatsapp": "573000000000",
+  "currency": "COP",
+  "locale": "es-CO",
+  "hideSoldOut": false,
+  "theme": { "mode": "auto" },
+  "font": "clasica"
+}

@@ -2,23 +2,37 @@
 (function () {
   const KEY = "tienda-admin-v1";
   const $ = (s) => document.querySelector(s);
+  const T = window.Theme;
+  const DEFAULT_SITE = {
+    storeName: "Mi tienda", logo: "", brandMode: "name", heroTitle: "Belleza que se nota",
+    heroSubtitle: "Productos seleccionados, con disponibilidad actualizada.", whatsapp: "", currency: "COP", locale: "es-CO",
+    hideSoldOut: false, theme: { mode: "auto" }, font: "clasica",
+  };
   const state = {
     repo: "", token: "", branch: "main",
-    products: [], config: null, catalog: { categories: [], products: [] },
-    tab: "mine", dlg: null, // dlg = { mode: "add"|"edit", id?, supplier? }
+    products: [], config: null, catalog: { categories: [], products: [] }, site: { ...DEFAULT_SITE },
+    tab: "mine", dlg: null,
+    draft: null, logoFile: null, logoUrl: "", vaultExists: false,
   };
 
   /* ---------- utilidades ---------- */
   const store = {
-    get() { try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch { return null; } },
-    set(v) { try { localStorage.setItem(KEY, JSON.stringify(v)); } catch { /* sin almacenamiento */ } },
-    clear() { try { localStorage.removeItem(KEY); } catch { /* nada */ } },
+    get() {
+      for (const name of ["localStorage", "sessionStorage"]) {
+        try { const v = JSON.parse(window[name].getItem(KEY) || "null"); if (v && v.token) return v; } catch { /* sin acceso */ }
+      }
+      return null;
+    },
+    set(v, remember) {
+      this.clear();
+      try { (remember ? localStorage : sessionStorage).setItem(KEY, JSON.stringify(v)); } catch { /* sin almacenamiento */ }
+    },
+    clear() { for (const name of ["localStorage", "sessionStorage"]) { try { window[name].removeItem(KEY); } catch { /* nada */ } } },
   };
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const norm = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-  const SITE = window.SITE || {};
   const money = (n) => (n === null || n === undefined || n === "" ? "—" :
-    new Intl.NumberFormat(SITE.locale || "es-CO", { style: "currency", currency: SITE.currency || "COP", maximumFractionDigits: 0 }).format(n));
+    new Intl.NumberFormat(state.site.locale || "es-CO", { style: "currency", currency: state.site.currency || "COP", maximumFractionDigits: 0 }).format(n));
 
   function say(msg, kind) {
     const el = $("#status");
@@ -26,10 +40,52 @@
     el.className = "status" + (kind ? " " + kind : "");
   }
   const show = (el, on) => { el.hidden = !on; };
+  const showErr = (id, msg) => { const el = $(id); el.textContent = msg; show(el, true); };
 
   const toB64 = (bytes) => { let s = ""; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000)); return btoa(s); };
+  const fromB64 = (b64) => Uint8Array.from(atob(b64.replace(/\s/g, "")), (c) => c.charCodeAt(0));
   const encodeText = (t) => toB64(new TextEncoder().encode(t));
-  const decodeText = (b64) => new TextDecoder().decode(Uint8Array.from(atob(b64.replace(/\s/g, "")), (c) => c.charCodeAt(0)));
+  const decodeText = (b64) => new TextDecoder().decode(fromB64(b64));
+
+  /* ---------- usuario y contraseña (token cifrado) ---------- */
+  const ITER = 600000;
+  async function deriveKey(user, pass, salt, iter) {
+    const enc = new TextEncoder();
+    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);
+    const extra = enc.encode(":" + user.trim().toLowerCase());
+    const s = new Uint8Array(salt.length + extra.length); s.set(salt); s.set(extra, salt.length);
+    return crypto.subtle.deriveKey({ name: "PBKDF2", salt: s, iterations: iter, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+  }
+  async function makeVault(user, pass, secret) {
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await deriveKey(user, pass, salt, ITER);
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(JSON.stringify(secret))));
+    return { v: 1, kdf: "PBKDF2-SHA256", iter: ITER, salt: toB64(salt), iv: toB64(iv), data: toB64(ct) };
+  }
+  async function openVault(vault, user, pass) {
+    try {
+      const key = await deriveKey(user, pass, fromB64(vault.salt), vault.iter || ITER);
+      const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: fromB64(vault.iv) }, key, fromB64(vault.data));
+      return JSON.parse(new TextDecoder().decode(pt));
+    } catch { return null; }
+  }
+  async function fetchVault() {
+    try {
+      const r = await fetch("admin-vault.json?t=" + Date.now(), { cache: "no-store" });
+      if (!r.ok) return null;
+      const j = await r.json();
+      return j && j.v === 1 && j.data ? j : null;
+    } catch { return null; }
+  }
+  function passProblem(user, pass, pass2) {
+    if (user.trim().length < 3) return "El usuario debe tener al menos 3 caracteres.";
+    if (pass.length < 10) return "La contraseña debe tener al menos 10 caracteres. Una frase sirve bien, por ejemplo: mi tienda vende cejas lindas.";
+    if (/^\d+$/.test(pass) || new Set(pass).size < 5) return "Esa contraseña es muy fácil de adivinar. Usa una frase más larga.";
+    if (norm(pass).includes(norm(user.trim())) && user.trim().length >= 4) return "La contraseña no debe contener tu usuario.";
+    if (pass !== pass2) return "Las dos contraseñas no coinciden.";
+    return "";
+  }
 
   /* ---------- GitHub ---------- */
   class ApiError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
@@ -85,7 +141,7 @@
   async function updateJson(p, mutate, message) {
     for (let attempt = 0; attempt < 3; attempt++) {
       const { data, sha } = await readJson(p);
-      const next = mutate(structuredClone(data));
+      const next = mutate(data === null ? null : structuredClone(data));
       const r = await putFile(p, encodeText(JSON.stringify(next, null, 2) + "\n"), sha, message);
       if (r.ok) return next;
       if (r.status !== 409 && r.status !== 422) throw new ApiError(r.status, friendly(r.status));
@@ -93,19 +149,20 @@
     throw new ApiError(409, friendly(409));
   }
 
-  async function resizeToJpegB64(file, max = 900) {
+  async function resizeToB64(file, { max = 900, type = "image/jpeg" } = {}) {
     const bmp = await createImageBitmap(file);
     const k = Math.min(1, max / Math.max(bmp.width, bmp.height));
     const c = document.createElement("canvas");
     c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
     c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
-    return c.toDataURL("image/jpeg", 0.85).split(",")[1];
+    return c.toDataURL(type, 0.85).split(",")[1];
   }
 
-  async function uploadImage(file) {
-    const b64 = await resizeToJpegB64(file);
-    const p = `img/${Date.now()}.jpg`;
-    const r = await putFile(p, b64, null, "Subir foto de producto");
+  async function uploadImage(file, opts = {}) {
+    const type = opts.type || "image/jpeg";
+    const b64 = await resizeToB64(file, { max: opts.max || 900, type });
+    const p = `img/${opts.prefix || ""}${Date.now()}.${type === "image/png" ? "png" : "jpg"}`;
+    const r = await putFile(p, b64, null, opts.message || "Subir imagen");
     if (!r.ok) throw new ApiError(r.status, friendly(r.status));
     return p;
   }
@@ -115,10 +172,12 @@
     if (!repo.ok) throw new ApiError(repo.status, friendly(repo.status));
     state.branch = (await repo.json()).default_branch || "main";
 
-    const [prods, cfg] = await Promise.all([readJson("products.json"), readJson("sync/sync.config.json")]);
+    const [prods, cfg, site] = await Promise.all([readJson("products.json"), readJson("sync/sync.config.json"), readJson("site.json")]);
     state.products = prods.data?.products || [];
     state.config = cfg.data || { categories: [], soldOutWhenQuantityAtOrBelow: 0 };
     state.config.categories = state.config.categories || [];
+    state.site = { ...DEFAULT_SITE, ...(site.data || {}) };
+    state.draft = null;
 
     const cat = await gh(`contents/data/supplier-catalog.json?ref=${encodeURIComponent(state.branch)}`, { headers: { Accept: "application/vnd.github.raw+json" } });
     state.catalog = cat.ok ? await cat.json() : { categories: [], products: [] };
@@ -139,9 +198,10 @@
   };
 
   /* ---------- pestañas ---------- */
+  const TABS = ["mine", "add", "cats", "look", "access"];
   function setTab(name) {
     state.tab = name;
-    for (const t of ["mine", "add", "cats"]) {
+    for (const t of TABS) {
       $("#tab-" + t).setAttribute("aria-selected", String(t === name));
       show($("#view-" + t), t === name);
     }
@@ -236,10 +296,178 @@
     $("#rule-qty").checked = state.config.soldOutWhenQuantityAtOrBelow !== null && state.config.soldOutWhenQuantityAtOrBelow !== undefined;
   }
 
+  /* ---------- Apariencia ---------- */
+  let lookBuilt = false;
+  const DEFAULT_COLORS = T.PALETTES[0];
+
+  function buildLookUI() {
+    if (lookBuilt) return;
+    lookBuilt = true;
+    $("#pals").innerHTML =
+      `<button type="button" class="pal" data-pal="auto" aria-pressed="false">
+         <span class="swatches"><span style="background:#faf6f2"></span><span style="background:#141414"></span></span>
+         <span>Automática<br><small>Clara u oscura según el dispositivo</small></span></button>` +
+      T.PALETTES.map((p) => `<button type="button" class="pal" data-pal="${p.key}" aria-pressed="false">
+         <span class="swatches"><span style="background:${p.background}"></span><span style="background:${p.accent}"></span><span style="background:${p.text}"></span></span>
+         <span>${esc(p.name)}</span></button>`).join("");
+    $("#fonts").innerHTML = T.FONTS.map((f) => `<button type="button" class="font" data-font="${f.key}" aria-pressed="false">
+         <span class="f-name">${esc(f.name)}</span><span class="f-sample" style="font-family:${f.head}">Belleza que se nota</span></button>`).join("");
+    T.loadFonts(T.FONTS.map((f) => f.key));
+  }
+
+  function themeColors(d) {
+    const t = d.theme || {};
+    return t.mode === "custom" ? t : DEFAULT_COLORS;
+  }
+
+  function syncLookInputs() {
+    const d = state.draft;
+    $("#l-name").value = d.storeName || "";
+    $("#l-hero").value = d.heroTitle || "";
+    $("#l-sub").value = d.heroSubtitle || "";
+    $("#l-wa").value = d.whatsapp || "";
+    $("#l-hide").checked = !!d.hideSoldOut;
+    document.querySelectorAll('input[name="brandMode"]').forEach((r) => { r.checked = r.value === (d.brandMode || "name"); });
+    const c = themeColors(d);
+    $("#c-accent").value = c.accent; $("#c-bg").value = c.background; $("#c-text").value = c.text;
+    document.querySelectorAll(".pal").forEach((b) => {
+      const k = b.dataset.pal;
+      b.setAttribute("aria-pressed", String(k === "auto" ? (d.theme?.mode || "auto") === "auto" : d.theme?.mode === "custom" && d.theme.preset === k));
+    });
+    document.querySelectorAll(".font").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.font === (d.font || "clasica"))));
+    const logoSrc = state.logoUrl || d.logo;
+    const img = $("#l-logo-img");
+    img.hidden = !logoSrc; if (logoSrc) img.src = logoSrc;
+    show($("#l-logo-remove"), !!logoSrc);
+  }
+
+  function renderPreview() {
+    const d = state.draft;
+    const el = $("#preview");
+    T.apply(d, el);
+    const logoSrc = state.logoUrl || d.logo;
+    const card = (name, price, out) => `<article class="card${out ? " out" : ""}">
+      <div class="media"><span class="ph" aria-hidden="true">${esc(name[0])}</span>${out ? '<span class="badge">Agotado</span>' : ""}</div>
+      <div class="body"><span class="cat">Cejas</span><h4 class="name">${esc(name)}</h4><span class="price">${money(price)}</span></div>
+      <div class="actions">${out ? '<span class="btn" aria-disabled="true">No disponible por ahora</span>' : '<span class="btn">Pedir por WhatsApp</span>'}</div></article>`;
+    el.innerHTML = `<div class="p-top"><span class="brand">${T.brandHTML(d, logoSrc)}</span><span class="btn btn-ghost">Escríbenos</span></div>
+      <div class="p-hero"><h3>${esc(d.heroTitle)}</h3><p>${esc(d.heroSubtitle)}</p></div>
+      <div class="p-grid">${card("Producto de ejemplo", 25000, false)}${card("Producto agotado", 18000, true)}</div>`;
+    const w = T.warnings(d.theme);
+    const warn = $("#theme-warn");
+    warn.textContent = w.join(" ");
+    show(warn, w.length > 0);
+  }
+
+  function renderLook() {
+    buildLookUI();
+    if (!state.draft) state.draft = structuredClone(state.site);
+    syncLookInputs();
+    renderPreview();
+  }
+
+  function setCustomFromInputs() {
+    state.draft.theme = { mode: "custom", preset: "custom", accent: $("#c-accent").value, background: $("#c-bg").value, text: $("#c-text").value };
+  }
+
+  const bindLook = () => {
+    const live = (id, key) => $(id).addEventListener("input", (e) => { state.draft[key] = e.target.value; renderPreview(); });
+    live("#l-name", "storeName"); live("#l-hero", "heroTitle"); live("#l-sub", "heroSubtitle"); live("#l-wa", "whatsapp");
+    $("#l-name").addEventListener("input", () => show($("#e-lname"), false));
+    $("#l-wa").addEventListener("input", () => show($("#e-wa"), false));
+    $("#l-hide").addEventListener("change", (e) => { state.draft.hideSoldOut = e.target.checked; });
+    document.querySelectorAll('input[name="brandMode"]').forEach((r) => r.addEventListener("change", () => { state.draft.brandMode = r.value; renderPreview(); }));
+    for (const id of ["#c-accent", "#c-bg", "#c-text"]) $(id).addEventListener("input", () => { setCustomFromInputs(); syncLookInputs(); renderPreview(); });
+
+    $("#pals").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-pal]");
+      if (!b) return;
+      if (b.dataset.pal === "auto") state.draft.theme = { mode: "auto" };
+      else { const p = T.PALETTES.find((x) => x.key === b.dataset.pal); state.draft.theme = { mode: "custom", preset: p.key, accent: p.accent, background: p.background, text: p.text }; }
+      syncLookInputs(); renderPreview();
+    });
+    $("#fonts").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-font]");
+      if (!b) return;
+      state.draft.font = b.dataset.font; syncLookInputs(); renderPreview();
+    });
+
+    $("#l-logo-file").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      state.logoFile = file;
+      if (state.logoUrl) URL.revokeObjectURL(state.logoUrl);
+      state.logoUrl = URL.createObjectURL(file);
+      if ((state.draft.brandMode || "name") === "name") state.draft.brandMode = "both";
+      syncLookInputs(); renderPreview();
+    });
+    $("#l-logo-remove").addEventListener("click", () => {
+      state.logoFile = null; if (state.logoUrl) URL.revokeObjectURL(state.logoUrl); state.logoUrl = "";
+      $("#l-logo-file").value = "";
+      state.draft.logo = ""; state.draft.brandMode = "name";
+      syncLookInputs(); renderPreview();
+    });
+
+    $("#look-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const d = state.draft;
+      show($("#look-error"), false);
+      let bad = false;
+      if (!String(d.storeName || "").trim()) { show($("#e-lname"), true); bad = true; $("#l-name").focus(); }
+      const wa = String(d.whatsapp || "").replace(/[\s+\-()]/g, "");
+      if (!/^\d{8,15}$/.test(wa)) { show($("#e-wa"), true); if (!bad) $("#l-wa").focus(); bad = true; }
+      if (bad) return;
+      const btn = $("#look-save");
+      btn.disabled = true; btn.textContent = "Guardando…";
+      try {
+        let logo = d.logo;
+        if (state.logoFile) logo = await uploadImage(state.logoFile, { type: "image/png", max: 480, prefix: "logo-", message: "Subir logo" });
+        const next = { ...d, storeName: d.storeName.trim(), whatsapp: wa, logo };
+        const saved = await updateJson("site.json", () => next, "Cambiar apariencia de la tienda");
+        state.site = { ...DEFAULT_SITE, ...saved };
+        state.draft = structuredClone(state.site);
+        state.logoFile = null; if (state.logoUrl) URL.revokeObjectURL(state.logoUrl); state.logoUrl = "";
+        $("#l-logo-file").value = "";
+        syncLookInputs(); renderPreview();
+        say("Guardado. Los cambios se ven en tu tienda en uno o dos minutos.", "ok");
+      } catch (err) { showErr("#look-error", err.message || friendly(0)); }
+      finally { btn.disabled = false; btn.textContent = "Guardar apariencia"; }
+    });
+  };
+
+  /* ---------- Acceso ---------- */
+  function renderAccess() {
+    $("#access-title").textContent = state.vaultExists ? "Cambiar usuario o contraseña" : "Crear usuario y contraseña";
+    $("#access-text").textContent = state.vaultExists
+      ? "Ya puedes entrar con usuario y contraseña. Aquí puedes cambiarlos."
+      : "Con esto entras al panel desde cualquier equipo sin pegar el token.";
+  }
+
+  $("#access-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const user = $("#a-user").value, pass = $("#a-pass").value, pass2 = $("#a-pass2").value;
+    show($("#access-error"), false);
+    const problem = passProblem(user, pass, pass2);
+    if (problem) { showErr("#access-error", problem); return; }
+    const btn = $("#access-save");
+    btn.disabled = true; btn.textContent = "Guardando…";
+    try {
+      const vault = await makeVault(user, pass, { t: state.token, r: state.repo });
+      await updateJson("admin-vault.json", () => vault, "Guardar acceso al panel");
+      state.vaultExists = true;
+      $("#a-user").value = ""; $("#a-pass").value = ""; $("#a-pass2").value = "";
+      renderAccess();
+      say("Listo. Desde ahora entras con tu usuario y contraseña. Funciona en uno o dos minutos, cuando GitHub publique el cambio.", "ok");
+    } catch (err) { showErr("#access-error", err.message || friendly(0)); }
+    finally { btn.disabled = false; btn.textContent = "Guardar acceso"; }
+  });
+
   function render() {
     if (state.tab === "mine") renderMine();
     if (state.tab === "add") renderAdd();
     if (state.tab === "cats") renderCats();
+    if (state.tab === "look") renderLook();
+    if (state.tab === "access") renderAccess();
   }
 
   /* ---------- Diálogo de producto ---------- */
@@ -295,7 +523,7 @@
     btn.disabled = true; btn.textContent = "Guardando…";
     try {
       let image = f.image.value.trim();
-      if (f.file.files[0]) image = await uploadImage(f.file.files[0]);
+      if (f.file.files[0]) image = await uploadImage(f.file.files[0], { message: "Subir foto de producto" });
       const base = { name, category: f.cat.value.trim(), price, image, hidden: f.hidden.checked || undefined };
 
       if (state.dlg.mode === "add") {
@@ -362,9 +590,10 @@
     }
     if (t.dataset.rmcat) removeCategory(t.dataset.rmcat);
   });
-  for (const t of ["mine", "add", "cats"]) $("#tab-" + t).addEventListener("click", () => setTab(t));
+  for (const t of TABS) $("#tab-" + t).addEventListener("click", () => setTab(t));
   $("#s-q").addEventListener("input", renderAdd);
   $("#s-cat").addEventListener("change", renderAdd);
+  bindLook();
 
   async function removeCategory(id) {
     const name = categoryLabel(id);
@@ -402,6 +631,10 @@
     } catch (err) { e.target.checked = !on; say(err.message, "bad"); }
   });
 
+  $("#btn-reload").addEventListener("click", async () => {
+    try { say("Cargando…"); await loadAll(); say("Datos al día.", "ok"); render(); } catch (err) { say(err.message, "bad"); }
+  });
+
   $("#btn-check").addEventListener("click", async () => {
     const b = $("#btn-check");
     b.disabled = true;
@@ -413,49 +646,85 @@
     b.disabled = false;
   });
 
-  $("#btn-logout").addEventListener("click", () => { store.clear(); state.token = ""; showLogin(); say(""); });
+  $("#btn-logout").addEventListener("click", () => { store.clear(); state.token = ""; state.draft = null; showLogin(); say(""); });
 
   /* ---------- Entrada ---------- */
-  function showLogin(prefillRepo) {
-    show($("#login"), true); show($("#app"), false); show($("#top-actions"), false);
-    if (prefillRepo) $("#in-repo").value = prefillRepo;
-    $("#in-token").value = "";
+  function guessRepo() {
+    const m = location.hostname.match(/^([^.]+)\.github\.io$/i);
+    if (!m) return "";
+    const seg = location.pathname.split("/").filter(Boolean)[0];
+    return seg && !/\.html?$/i.test(seg) ? `${m[1]}/${seg}` : "";
   }
 
-  async function enter() {
+  function chooseLoginForm(usePass) {
+    show($("#form-pass"), usePass);
+    show($("#form-token"), !usePass);
+    show($("#to-pass-wrap"), state.vaultExists);
+    $("#token-intro").hidden = state.vaultExists;
+    (usePass ? $("#p-user") : $("#in-repo")).focus();
+  }
+
+  async function showLogin() {
+    show($("#login"), true); show($("#app"), false); show($("#top-actions"), false);
+    for (const id of ["#pass-error", "#login-error"]) show($(id), false);
+    $("#in-token").value = ""; $("#p-pass").value = "";
+    $("#in-repo").value = $("#in-repo").value || guessRepo();
+    state.vaultExists = !!(await fetchVault());
+    chooseLoginForm(state.vaultExists);
+  }
+
+  async function enter(firstTime) {
     say("Cargando…");
     await loadAll();
     show($("#login"), false); show($("#app"), true); show($("#top-actions"), true);
     say("");
-    setTab(state.tab);
+    if (firstTime && !state.vaultExists) {
+      setTab("access");
+      say("Ya estás dentro. Crea tu usuario y contraseña para entrar más fácil la próxima vez.", "ok");
+    } else setTab("mine");
   }
 
-  $("#btn-reload").addEventListener("click", async () => {
-    try { say("Cargando…"); await loadAll(); say("Datos al día.", "ok"); render(); } catch (err) { say(err.message, "bad"); }
+  $("#to-token").addEventListener("click", () => chooseLoginForm(false));
+  $("#to-pass").addEventListener("click", () => chooseLoginForm(true));
+
+  $("#form-pass").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const user = $("#p-user").value.trim(), pass = $("#p-pass").value;
+    show($("#pass-error"), false);
+    if (!user || !pass) { showErr("#pass-error", "Escribe tu usuario y tu contraseña."); return; }
+    const btn = $("#pass-submit");
+    btn.disabled = true; btn.textContent = "Entrando…";
+    try {
+      const vault = await fetchVault();
+      if (!vault) throw new Error("Todavía no hay usuario y contraseña creados. Entra con tu token de GitHub y créalos en la pestaña Acceso.");
+      const secret = await openVault(vault, user, pass);
+      if (!secret || !secret.t || !secret.r) throw new Error("Usuario o contraseña incorrectos. Revísalos e intenta de nuevo.");
+      state.repo = secret.r; state.token = secret.t;
+      await enter(false);
+      store.set({ repo: state.repo, token: state.token }, $("#p-remember").checked);
+    } catch (ex) { say(""); showErr("#pass-error", ex.message || friendly(0)); }
+    finally { btn.disabled = false; btn.textContent = "Entrar al panel"; }
   });
 
-  $("#login-form").addEventListener("submit", async (e) => {
+  $("#form-token").addEventListener("submit", async (e) => {
     e.preventDefault();
     const repo = $("#in-repo").value.trim().replace(/^https?:\/\/github\.com\//, "").replace(/\/+$/, "");
     const token = $("#in-token").value.trim();
-    const err = $("#login-error");
-    if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) { err.textContent = "Escribe el repositorio como usuario/nombre-del-repositorio."; show(err, true); $("#in-repo").focus(); return; }
-    if (!token) { err.textContent = "Pega tu token de acceso."; show(err, true); $("#in-token").focus(); return; }
-    show(err, false);
+    show($("#login-error"), false);
+    if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) { showErr("#login-error", "Escribe el repositorio como usuario/nombre-del-repositorio."); $("#in-repo").focus(); return; }
+    if (!token) { showErr("#login-error", "Pega tu token de acceso."); $("#in-token").focus(); return; }
     state.repo = repo; state.token = token;
     try {
-      await enter();
-      store.set({ repo, token });
-    } catch (ex) {
-      say("");
-      err.textContent = ex.message || friendly(0); show(err, true);
-    }
+      await enter(true);
+      store.set({ repo, token }, $("#t-remember").checked);
+    } catch (ex) { say(""); showErr("#login-error", ex.message || friendly(0)); }
   });
 
   (async function start() {
     const s = store.get();
     if (!s) return showLogin();
     state.repo = s.repo; state.token = s.token;
-    try { await enter(); } catch (ex) { showLogin(s.repo); say(ex.message, "bad"); }
+    state.vaultExists = !!(await fetchVault());
+    try { await enter(false); } catch (ex) { await showLogin(); say(ex.message, "bad"); }
   })();
 })();

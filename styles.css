@@ -8,6 +8,9 @@
   --accent-ink: #ffffff;
   --accent-soft: #f2e4ec;
   --out: #8a7f84;
+  --accent-text: var(--accent);
+  --font-head: Georgia, "Times New Roman", serif;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --radius: 14px;
 }
 @media (prefers-color-scheme: dark) {
@@ -30,16 +33,17 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font: 16px/1.5 var(--font-body);
 }
 .wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
 
 .top { border-bottom: 1px solid var(--line); background: var(--bg); position: sticky; top: 0; z-index: 5; }
 .top-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; }
-.brand { font-family: Georgia, "Times New Roman", serif; font-size: 22px; color: var(--ink); text-decoration: none; letter-spacing: .01em; }
+.brand { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-head); font-size: 22px; color: var(--ink); text-decoration: none; letter-spacing: .01em; }
+.brand img { height: 40px; width: auto; max-width: 180px; object-fit: contain; display: block; }
 
 .hero { padding: 48px 0 24px; }
-.hero h1 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; font-size: clamp(32px, 6vw, 52px); line-height: 1.1; margin: 0 0 12px; }
+.hero h1 { font-family: var(--font-head); font-weight: 400; font-size: clamp(32px, 6vw, 52px); line-height: 1.1; margin: 0 0 12px; }
 .hero p { margin: 0; color: var(--muted); max-width: 52ch; }
 
 .tools { display: grid; gap: 16px; margin: 16px 0 8px; }
@@ -67,7 +71,7 @@ body {
 }
 .media { position: relative; aspect-ratio: 1 / 1; background: var(--accent-soft); display: grid; place-items: center; overflow: hidden; }
 .media img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.media .ph { font-family: Georgia, serif; font-size: 44px; color: var(--accent); opacity: .5; }
+.media .ph { font-family: var(--font-head); font-size: 44px; color: var(--accent); opacity: .5; }
 .badge {
   position: absolute; top: 12px; left: 12px; padding: 4px 12px; border-radius: 999px;
   background: var(--ink); color: var(--bg); font-size: 13px; font-weight: 600;
@@ -83,7 +87,7 @@ body {
   border-radius: 10px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink);
   font: inherit; font-weight: 600; text-decoration: none; cursor: pointer; width: 100%;
 }
-.btn-ghost { background: transparent; color: var(--accent); width: auto; }
+.btn-ghost { background: transparent; color: var(--accent-text); border-color: var(--accent-text); width: auto; }
 .btn[aria-disabled="true"] { background: transparent; border-color: var(--line); color: var(--out); cursor: not-allowed; }
 
 .card.out .media img, .card.out .media .ph { filter: grayscale(1); opacity: .45; }

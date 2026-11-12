@@ -26,8 +26,27 @@
     <!-- Entrar -->
     <section id="login" class="panel" hidden>
       <h1>Entrar al panel</h1>
-      <p class="muted">Esta página guarda tus cambios en tu repositorio de GitHub. Solo necesitas entrar una vez en cada navegador.</p>
-      <form id="login-form" novalidate>
+
+      <form id="form-pass" novalidate hidden>
+        <label class="field">
+          <span>Usuario</span>
+          <input id="p-user" autocomplete="username" autocapitalize="none" spellcheck="false">
+        </label>
+        <label class="field">
+          <span>Contraseña</span>
+          <input id="p-pass" type="password" autocomplete="current-password">
+        </label>
+        <label class="check">
+          <input type="checkbox" id="p-remember" checked>
+          <span>Mantener la sesión iniciada en este equipo</span>
+        </label>
+        <p class="error" id="pass-error" role="alert" hidden></p>
+        <button class="btn" id="pass-submit" type="submit">Entrar al panel</button>
+        <p class="alt"><button class="link" id="to-token" type="button">Entrar con token de GitHub</button></p>
+      </form>
+
+      <form id="form-token" novalidate hidden>
+        <p class="muted" id="token-intro">La primera vez entras con tu token de GitHub. Luego creas tu usuario y contraseña y ya no lo necesitas.</p>
         <label class="field">
           <span>Repositorio de GitHub</span>
           <input id="in-repo" autocomplete="off" spellcheck="false">
@@ -36,20 +55,25 @@
         <label class="field">
           <span>Token de acceso</span>
           <input id="in-token" type="password" autocomplete="off" spellcheck="false">
-          <small>Es como una contraseña solo para este panel. Se guarda únicamente en este navegador.</small>
+          <small>Es como una contraseña para este panel. Se guarda solo en este navegador.</small>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="t-remember" checked>
+          <span>Mantener la sesión iniciada en este equipo</span>
         </label>
         <p class="error" id="login-error" role="alert" hidden></p>
-        <button class="btn" type="submit">Entrar al panel</button>
+        <button class="btn" type="submit">Entrar con token</button>
+        <p class="alt" id="to-pass-wrap" hidden><button class="link" id="to-pass" type="button">Volver a usuario y contraseña</button></p>
+        <details class="help">
+          <summary>¿Cómo consigo el token?</summary>
+          <ol>
+            <li>Abre <strong>github.com/settings/personal-access-tokens/new</strong>.</li>
+            <li>En <strong>Repository access</strong> elige "Only select repositories" y marca solo el repositorio de tu tienda.</li>
+            <li>En <strong>Repository permissions</strong> pon <strong>Contents: Read and write</strong> y <strong>Actions: Read and write</strong>.</li>
+            <li>Pulsa "Generate token", copia el texto que empieza con <code>github_pat_</code> y pégalo arriba.</li>
+          </ol>
+        </details>
       </form>
-      <details class="help">
-        <summary>¿Cómo consigo el token?</summary>
-        <ol>
-          <li>En GitHub abre <strong>Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token</strong>.</li>
-          <li>En <strong>Repository access</strong> elige "Only select repositories" y marca solo el repositorio de tu tienda.</li>
-          <li>En <strong>Permissions → Repository permissions</strong> pon <strong>Contents: Read and write</strong> y <strong>Actions: Read and write</strong>.</li>
-          <li>Pulsa "Generate token", copia el texto que empieza con <code>github_pat_</code> y pégalo arriba.</li>
-        </ol>
-      </details>
     </section>
 
     <!-- Panel -->
@@ -58,6 +82,8 @@
         <button class="tab" role="tab" id="tab-mine" aria-controls="view-mine" aria-selected="true" type="button">Mis productos</button>
         <button class="tab" role="tab" id="tab-add" aria-controls="view-add" aria-selected="false" type="button">Agregar del proveedor</button>
         <button class="tab" role="tab" id="tab-cats" aria-controls="view-cats" aria-selected="false" type="button">Categorías del proveedor</button>
+        <button class="tab" role="tab" id="tab-look" aria-controls="view-look" aria-selected="false" type="button">Apariencia</button>
+        <button class="tab" role="tab" id="tab-access" aria-controls="view-access" aria-selected="false" type="button">Acceso</button>
       </div>
 
       <div id="view-mine" role="tabpanel" aria-labelledby="tab-mine">
@@ -118,6 +144,114 @@
           </label>
         </div>
       </div>
+
+      <!-- Apariencia -->
+      <div id="view-look" role="tabpanel" aria-labelledby="tab-look" hidden>
+        <div class="look">
+          <form id="look-form" class="look-form" novalidate>
+            <fieldset class="panel">
+              <legend>Nombre y logo</legend>
+              <label class="field">
+                <span>Nombre de tu tienda</span>
+                <input id="l-name" autocomplete="off">
+                <small class="error" id="e-lname" hidden>Escribe el nombre de tu tienda.</small>
+              </label>
+              <div class="field">
+                <span>Logo</span>
+                <div class="logo-row">
+                  <img id="l-logo-img" alt="Logo actual" hidden>
+                  <div class="logo-inputs">
+                    <input id="l-logo-file" type="file" accept="image/*" aria-label="Subir un logo desde tu equipo">
+                    <button class="btn btn-ghost" type="button" id="l-logo-remove" hidden>Quitar logo</button>
+                  </div>
+                </div>
+                <small>Mejor si es un PNG con fondo transparente.</small>
+              </div>
+              <div class="field" role="radiogroup" aria-labelledby="bm-label">
+                <span id="bm-label">Qué se ve arriba en tu tienda</span>
+                <label class="check"><input type="radio" name="brandMode" value="name"><span>Solo el nombre</span></label>
+                <label class="check"><input type="radio" name="brandMode" value="logo"><span>Solo el logo</span></label>
+                <label class="check"><input type="radio" name="brandMode" value="both"><span>Logo y nombre</span></label>
+              </div>
+            </fieldset>
+
+            <fieldset class="panel">
+              <legend>Portada y pedidos</legend>
+              <label class="field">
+                <span>Título grande de la portada</span>
+                <input id="l-hero" autocomplete="off">
+              </label>
+              <label class="field">
+                <span>Frase debajo del título</span>
+                <input id="l-sub" autocomplete="off">
+              </label>
+              <label class="field">
+                <span>WhatsApp para recibir pedidos</span>
+                <input id="l-wa" inputmode="numeric" autocomplete="off">
+                <small>Con indicativo de país, sin + ni espacios. En Colombia empieza por 57.</small>
+                <small class="error" id="e-wa" hidden>Escribe solo números, con indicativo de país. Por ejemplo 573001234567.</small>
+              </label>
+              <label class="check">
+                <input type="checkbox" id="l-hide">
+                <span>Ocultar los productos agotados en vez de mostrarlos con la etiqueta "Agotado"</span>
+              </label>
+            </fieldset>
+
+            <fieldset class="panel">
+              <legend>Colores</legend>
+              <p class="muted">Elige una combinación lista o ajusta los tres colores a tu gusto.</p>
+              <div class="pals" id="pals" role="group" aria-label="Combinaciones de colores"></div>
+              <div class="colors">
+                <label class="field color"><span>Color principal (botones)</span><input type="color" id="c-accent"></label>
+                <label class="field color"><span>Color de fondo</span><input type="color" id="c-bg"></label>
+                <label class="field color"><span>Color del texto</span><input type="color" id="c-text"></label>
+              </div>
+              <p class="warn" id="theme-warn" role="status" hidden></p>
+            </fieldset>
+
+            <fieldset class="panel">
+              <legend>Tipo de letra</legend>
+              <div class="fonts" id="fonts" role="group" aria-label="Tipos de letra"></div>
+            </fieldset>
+
+            <p class="error" id="look-error" role="alert" hidden></p>
+            <button class="btn btn-save" id="look-save" type="submit">Guardar apariencia</button>
+          </form>
+
+          <aside class="look-preview" aria-label="Vista previa de tu tienda">
+            <p class="muted">Así se ve tu tienda</p>
+            <div class="preview" id="preview"></div>
+          </aside>
+        </div>
+      </div>
+
+      <!-- Acceso -->
+      <div id="view-access" role="tabpanel" aria-labelledby="tab-access" hidden>
+        <form class="panel" id="access-form" novalidate>
+          <h2 id="access-title">Crear usuario y contraseña</h2>
+          <p class="muted" id="access-text">Con esto entras al panel desde cualquier equipo sin pegar el token.</p>
+          <label class="field">
+            <span>Usuario</span>
+            <input id="a-user" autocomplete="username" autocapitalize="none" spellcheck="false">
+          </label>
+          <label class="field">
+            <span>Contraseña</span>
+            <input id="a-pass" type="password" autocomplete="new-password">
+            <small>Mínimo 10 caracteres. Una frase larga sirve mejor que una palabra con símbolos.</small>
+          </label>
+          <label class="field">
+            <span>Repite la contraseña</span>
+            <input id="a-pass2" type="password" autocomplete="new-password">
+          </label>
+          <p class="error" id="access-error" role="alert" hidden></p>
+          <button class="btn" id="access-save" type="submit">Guardar acceso</button>
+        </form>
+        <div class="panel">
+          <h2>Cómo funciona y qué cuidar</h2>
+          <p class="muted">Tu token de GitHub se guarda cifrado con tu contraseña en el archivo <code>admin-vault.json</code> de tu repositorio. Sin la contraseña nadie puede abrirlo. Como el repositorio es público, <strong>la contraseña tiene que ser larga y que nadie más use</strong>: si es fácil de adivinar, alguien podría descifrarlo.</p>
+          <p class="muted">Si olvidas la contraseña, entra con un token nuevo y crea otra. Si el token vence, haz lo mismo.</p>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -171,7 +305,7 @@
     </form>
   </dialog>
 
-  <script src="site.config.js"></script>
+  <script src="theme.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>

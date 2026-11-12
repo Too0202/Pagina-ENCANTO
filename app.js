@@ -1,5 +1,10 @@
 (function () {
-  const S = window.SITE || {};
+  const DEFAULTS = {
+    storeName: "Mi tienda", logo: "", brandMode: "name",
+    heroTitle: "", heroSubtitle: "", whatsapp: "", currency: "COP", locale: "es-CO",
+    hideSoldOut: false, theme: { mode: "auto" }, font: "clasica",
+  };
+  const S = { ...DEFAULTS };
   const $ = (id) => document.getElementById(id);
   const state = { products: [], cat: "Todos", q: "" };
 
@@ -65,13 +70,24 @@
       .join("");
   }
 
-  function init(data) {
-    state.products = data.products || [];
+  function applySite() {
+    window.Theme.apply(S);
     document.title = S.storeName || document.title;
-    $("brand").textContent = S.storeName || "Tienda";
+    $("brand").innerHTML = window.Theme.brandHTML(S);
     $("hero-title").textContent = S.heroTitle || "";
     $("hero-sub").textContent = S.heroSubtitle || "";
+    $("hero-title").hidden = !S.heroTitle;
+    $("hero-sub").hidden = !S.heroSubtitle;
     $("wa-header").href = `https://wa.me/${S.whatsapp}`;
+    if (S.logo) {
+      let ic = document.querySelector('link[rel="icon"]');
+      if (!ic) { ic = document.createElement("link"); ic.rel = "icon"; document.head.appendChild(ic); }
+      ic.href = S.logo;
+    }
+  }
+
+  function init(data) {
+    state.products = data.products || [];
     if (data.updatedAt) {
       const d = new Date(data.updatedAt);
       $("updated").textContent = "Disponibilidad actualizada el " +
@@ -94,10 +110,16 @@
     renderChips(); render();
   });
 
-  fetch("products.json", { cache: "no-store" })
-    .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
-    .then(init)
+  const getJson = (url) => fetch(url, { cache: "no-store" }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
+
+  Promise.all([
+    getJson("site.json").catch(() => ({})),
+    getJson("products.json"),
+  ])
+    .then(([site, data]) => { Object.assign(S, site); applySite(); init(data); })
     .catch(() => {
+      applySite();
       $("meta").textContent = "No pudimos cargar el catálogo. Intenta recargar la página.";
-    });
+    })
+    .finally(() => { document.body.style.visibility = "visible"; });
 })();
