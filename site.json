@@ -1,13 +1,19 @@
 {
-  "storeName": "Mi tienda",
+  "storeName": "ENCANTO",
   "logo": "",
   "brandMode": "name",
   "heroTitle": "Belleza que se nota",
-  "heroSubtitle": "Productos seleccionados, con disponibilidad actualizada.",
-  "whatsapp": "573000000000",
+  "heroSubtitle": "Cuidamos tu piel de la mejor manera",
+  "whatsapp": "573243130431",
   "currency": "COP",
   "locale": "es-CO",
   "hideSoldOut": false,
-  "theme": { "mode": "auto" },
-  "font": "clasica"
+  "theme": {
+    "mode": "custom",
+    "preset": "rosa",
+    "accent": "#c2417a",
+    "background": "#fff5f8",
+    "text": "#3b2430"
+  },
+  "font": "elegante"
 }
