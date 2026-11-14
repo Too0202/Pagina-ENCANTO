@@ -3,49 +3,130 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Tienda de cosméticos</title>
-  <meta name="description" content="Productos cosméticos seleccionados para ti.">
+  <title>Tienda</title>
+  <meta name="description" content="Productos de belleza y cuidado personal seleccionados para ti.">
   <link rel="stylesheet" href="styles.css">
   <style>body { visibility: hidden; }</style>
   <noscript><style>body { visibility: visible; }</style></noscript>
 </head>
 <body>
+  <div class="announce" id="announce" hidden></div>
+
   <header class="top">
     <div class="wrap top-inner">
       <a class="brand" href="./" id="brand"></a>
-      <a class="btn btn-ghost" id="wa-header" target="_blank" rel="noopener">Escríbenos</a>
+      <div class="top-right">
+        <a class="hbtn" id="wa-header" target="_blank" rel="noopener">Escríbenos</a>
+        <button class="hbtn" id="cart-btn" type="button" aria-haspopup="dialog">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+          <span>Carrito</span>
+          <span class="count" id="cart-count" aria-label="0 productos en el carrito">0</span>
+        </button>
+      </div>
     </div>
   </header>
 
-  <section class="hero">
-    <div class="wrap">
-      <h1 id="hero-title">Belleza que se nota</h1>
-      <p id="hero-sub">Productos seleccionados, con disponibilidad actualizada.</p>
-    </div>
-  </section>
+  <section class="stage" id="stage" aria-label="Portada"><div class="wrap" id="stage-inner"></div></section>
 
-  <main class="wrap">
-    <div class="tools">
-      <label class="field">
-        <span>Buscar</span>
-        <input id="q" type="search" placeholder="Ej. crema, labial, sérum" autocomplete="off">
+  <main class="wrap shop" id="catalogo" tabindex="-1">
+    <p class="notice" id="notice" role="status" aria-live="polite" hidden></p>
+
+    <div class="shop-head">
+      <h2 class="shop-title">Productos</h2>
+      <p class="meta" id="meta" aria-live="polite"></p>
+    </div>
+
+    <div class="toolbar">
+      <label class="search">
+        <span class="sr-only">Buscar productos</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+        <input id="q" type="search" placeholder="Buscar productos" autocomplete="off">
       </label>
-      <div class="chips" id="chips" role="group" aria-label="Categorías"></div>
+      <label>
+        <span class="sr-only">Ordenar por</span>
+        <select class="select" id="sort">
+          <option value="destacados">Destacados</option>
+          <option value="precio-asc">Precio: menor a mayor</option>
+          <option value="precio-desc">Precio: mayor a menor</option>
+          <option value="nombre">Nombre A–Z</option>
+        </select>
+      </label>
+      <button class="filter-btn" id="filter-btn" type="button" aria-haspopup="dialog">Filtros <span class="count" id="filter-count" hidden>0</span></button>
     </div>
 
-    <p class="meta" id="meta" aria-live="polite"></p>
-    <div class="grid" id="grid"></div>
+    <div class="active" id="active"></div>
 
-    <div class="empty" id="empty" hidden>
-      <h2>No encontramos productos</h2>
-      <p>Prueba con otra palabra o elige otra categoría.</p>
-      <button class="btn" id="clear" type="button">Ver todos los productos</button>
+    <div class="layout">
+      <aside class="sidebar" id="filters-desktop" aria-label="Filtros"></aside>
+      <div>
+        <div class="grid" id="grid"></div>
+        <div class="more" id="more" hidden><button class="btn" id="more-btn" type="button">Ver más productos</button></div>
+        <div class="empty" id="empty" hidden>
+          <h2>No encontramos productos</h2>
+          <p>Prueba con otra palabra o quita algún filtro.</p>
+          <button class="btn" id="clear" type="button">Ver todos los productos</button>
+        </div>
+      </div>
     </div>
   </main>
 
   <footer class="foot">
-    <div class="wrap"><span id="updated"></span></div>
+    <div class="wrap foot-inner">
+      <span id="foot-name"></span>
+      <a id="foot-wa" target="_blank" rel="noopener">Escríbenos por WhatsApp</a>
+      <span id="updated"></span>
+    </div>
   </footer>
+
+  <!-- Barra del carrito (celular) -->
+  <button class="cart-bar" id="cart-bar" type="button" hidden>
+    <span id="bar-text"></span>
+    <span class="bar-go">Ver carrito</span>
+  </button>
+
+  <!-- Filtros (celular) -->
+  <dialog id="filters-dlg" class="sheet" aria-labelledby="filters-title">
+    <div class="sheet-head">
+      <h2 id="filters-title">Filtros</h2>
+      <button class="icon-close" id="filters-close" type="button" aria-label="Cerrar los filtros">×</button>
+    </div>
+    <div class="sheet-body" id="filters-mobile"></div>
+    <div class="sheet-foot"><button class="btn" id="filters-done" type="button">Ver productos</button></div>
+  </dialog>
+
+  <!-- Carrito -->
+  <dialog id="cart-dlg" class="cart-dlg" aria-labelledby="cart-title">
+    <div class="cart-head">
+      <h2 id="cart-title">Tu pedido</h2>
+      <button class="icon-close" id="cart-close" type="button" aria-label="Cerrar el carrito">×</button>
+    </div>
+
+    <div id="cart-empty" class="cart-empty" hidden>
+      <p><strong>Tu carrito está vacío</strong></p>
+      <p>Agrega productos y arma tu pedido aquí.</p>
+      <button class="btn" type="button" id="cart-continue">Ver productos</button>
+    </div>
+
+    <div id="cart-full">
+      <ul class="cart-list" id="cart-list"></ul>
+      <p class="cart-total"><span>Total</span><strong id="cart-total"></strong></p>
+
+      <label class="field">
+        <span>Tu nombre (opcional)</span>
+        <input id="cart-name" autocomplete="name">
+      </label>
+      <label class="field">
+        <span>Notas para tu pedido (opcional)</span>
+        <textarea id="cart-notes" rows="2"></textarea>
+      </label>
+
+      <div class="cart-actions">
+        <a class="btn" id="cart-send" target="_blank" rel="noopener">Enviar pedido por WhatsApp</a>
+        <button class="btn btn-ghost" type="button" id="cart-clear">Vaciar carrito</button>
+      </div>
+      <p class="cart-hint">Se abre WhatsApp con tu pedido ya escrito. Solo tienes que enviarlo.</p>
+    </div>
+  </dialog>
 
   <script src="theme.js"></script>
   <script src="app.js"></script>

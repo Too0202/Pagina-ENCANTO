@@ -41,6 +41,26 @@ Como el repositorio es público, ese archivo también lo es. Está cifrado, pero
 
 Pestaña **Apariencia**: nombre, logo (solo nombre, solo logo o ambos), título y frase de la portada, WhatsApp, colores (una combinación lista o tres colores a tu gusto) y tipo de letra, con vista previa en vivo. Si los colores hacen difícil leer, el panel te avisa. Los cambios se ven en tu tienda en uno o dos minutos.
 
+## Stock propio
+- En "Mis productos" cada producto tiene "Tu stock" con − y +. Se guarda solo.
+- Si tienes stock (más de 0), el producto sigue a la venta aunque el proveedor lo oculte, lo desactive o lo quite.
+- Si tu stock es 0, manda el proveedor: si lo oculta o lo quita, desaparece de tu tienda (o sale "Agotado" si no activaste ocultar agotados).
+- El stock no baja solo cuando vendes: ajústalo tú después de cada venta.
+- "Crear producto propio" sirve para lo que no viene del proveedor; se vende solo mientras tengas stock.
+
+## Filtros, categorías, subcategorías y marcas
+- El proveedor no entrega subcategoría ni marca: tú las escribes en cada producto (o varios a la vez: marca las casillas y pulsa "Cambiar categoría, marca…").
+- La tienda arma sola los filtros (Categoría › Subcategoría, Marca, precio, solo disponibles).
+- Escribe siempre igual los nombres; el panel reutiliza la forma ya escrita si cambia solo mayúsculas o tildes.
+
+## Anuncio y banners
+- Apariencia › "Anuncio y banners": barra superior y hasta 8 banners con imagen (1600 × 700), título, texto y botón.
+- Cada banner puede llevar a una categoría (y subcategoría), a una marca o a un link.
+- Sin banners se muestra el título grande de la portada.
+
+## Carrito
+Los clientes agregan productos, ajustan cantidades y envían el pedido por WhatsApp.
+
 ## Cuidados
 
 - **El token es como una contraseña.** Se guarda solo en el navegador donde entraste. No lo compartas. Si lo pierdes o sospechas de él, bórralo en GitHub y crea otro.

@@ -87,12 +87,48 @@
       </div>
 
       <div id="view-mine" role="tabpanel" aria-labelledby="tab-mine">
-        <p class="muted" id="mine-summary"></p>
+        <div class="mine-tools" id="mine-tools">
+          <label class="field grow">
+            <span>Buscar en tus productos</span>
+            <input id="m-q" type="search" autocomplete="off">
+          </label>
+          <label class="field">
+            <span>Categoría</span>
+            <select id="m-cat"></select>
+          </label>
+          <label class="field">
+            <span>Marca</span>
+            <select id="m-brand"></select>
+          </label>
+          <label class="field">
+            <span>Estado</span>
+            <select id="m-state">
+              <option value="">Todos</option>
+              <option value="sale">A la venta</option>
+              <option value="out">Agotados</option>
+              <option value="hidden">Ocultos</option>
+              <option value="own">Con stock propio</option>
+              <option value="nocat">Sin categoría o sin marca</option>
+            </select>
+          </label>
+        </div>
+        <div class="mine-bar">
+          <label class="check"><input type="checkbox" id="m-all"><span id="m-all-label">Seleccionar todos</span></label>
+          <span class="muted" id="mine-summary"></span>
+          <span class="spacer"></span>
+          <button class="btn btn-ghost" id="m-own" type="button">Crear producto propio</button>
+        </div>
+        <div class="bulkbar" id="bulkbar" hidden>
+          <strong id="bulk-n"></strong>
+          <button class="btn" id="bulk-edit" type="button">Cambiar categoría, marca…</button>
+          <button class="btn btn-ghost" id="bulk-clear" type="button">Quitar selección</button>
+        </div>
         <div class="list" id="mine-list"></div>
+        <div class="more" id="mine-more" hidden><button class="btn btn-ghost" id="mine-more-btn" type="button">Ver más productos</button></div>
         <div class="empty" id="mine-empty" hidden>
-          <h2>Todavía no tienes productos</h2>
-          <p>Elige productos del catálogo del proveedor para empezar a venderlos.</p>
-          <button class="btn" type="button" data-goto="add">Agregar del proveedor</button>
+          <h2 id="mine-empty-title">Todavía no tienes productos</h2>
+          <p id="mine-empty-text">Elige productos del catálogo del proveedor para empezar a venderlos.</p>
+          <button class="btn" type="button" id="mine-empty-btn" data-goto="add">Agregar del proveedor</button>
         </div>
       </div>
 
@@ -176,7 +212,28 @@
             </fieldset>
 
             <fieldset class="panel">
+              <legend>Anuncio y banners</legend>
+              <label class="field">
+                <span>Mensaje de la barra superior (opcional)</span>
+                <input id="l-ann" autocomplete="off">
+                <small>Por ejemplo: Envíos a todo el país · 10% de descuento en tu primera compra.</small>
+              </label>
+              <label class="field">
+                <span>Link del mensaje (opcional)</span>
+                <input id="l-ann-link" autocomplete="off" spellcheck="false">
+                <small>Una dirección que empiece por https://</small>
+                <small class="error" id="e-annlink" hidden>El link debe empezar por https:// o http://</small>
+              </label>
+              <h3 class="sub-h">Banners de portada</h3>
+              <p class="muted">Aparecen arriba de los productos. Con dos o más, pasan solos. Imagen horizontal de 1600 × 700 píxeles, o sin imagen para un banner de solo texto.</p>
+              <div class="banners" id="banners"></div>
+              <p class="error" id="banners-error" role="alert" hidden></p>
+              <button class="btn btn-ghost" id="banner-add" type="button">Agregar banner</button>
+            </fieldset>
+
+            <fieldset class="panel">
               <legend>Portada y pedidos</legend>
+              <p class="muted">El título y la frase se muestran solo cuando no hay banners.</p>
               <label class="field">
                 <span>Título grande de la portada</span>
                 <input id="l-hero" autocomplete="off">
@@ -190,6 +247,11 @@
                 <input id="l-wa" inputmode="numeric" autocomplete="off">
                 <small>Con indicativo de país, sin + ni espacios. En Colombia empieza por 57.</small>
                 <small class="error" id="e-wa" hidden>Escribe solo números, con indicativo de país. Por ejemplo 573001234567.</small>
+              </label>
+              <label class="field">
+                <span>Saludo del pedido</span>
+                <input id="l-greet" autocomplete="off">
+                <small>Es la primera línea del mensaje que te llega por WhatsApp con cada pedido del carrito.</small>
               </label>
               <label class="check">
                 <input type="checkbox" id="l-hide">
@@ -265,16 +327,37 @@
         <input id="f-name" autocomplete="off">
         <small class="error" id="e-name" hidden>Escribe un nombre.</small>
       </label>
+      <div class="two">
+        <label class="field">
+          <span>Categoría en tu tienda</span>
+          <input id="f-cat" list="cat-options" autocomplete="off">
+          <datalist id="cat-options"></datalist>
+        </label>
+        <label class="field">
+          <span>Subcategoría</span>
+          <input id="f-sub" list="sub-options" autocomplete="off">
+          <datalist id="sub-options"></datalist>
+        </label>
+      </div>
       <label class="field">
-        <span>Categoría en tu tienda</span>
-        <input id="f-cat" list="cat-options" autocomplete="off">
-        <datalist id="cat-options"></datalist>
+        <span>Marca</span>
+        <input id="f-brand" list="brand-options" autocomplete="off">
+        <datalist id="brand-options"></datalist>
+        <small>Con la categoría, la subcategoría y la marca tus clientes filtran en la tienda.</small>
       </label>
-      <label class="field">
-        <span>Tu precio de venta</span>
-        <input id="f-price" type="number" inputmode="numeric" min="1" step="1">
-        <small class="error" id="e-price" hidden>Escribe tu precio de venta, mayor que cero.</small>
-      </label>
+      <div class="two">
+        <label class="field">
+          <span>Tu precio de venta</span>
+          <input id="f-price" type="number" inputmode="numeric" min="1" step="1">
+          <small class="error" id="e-price" hidden>Escribe tu precio de venta, mayor que cero.</small>
+        </label>
+        <label class="field">
+          <span>Stock propio (unidades que tienes)</span>
+          <input id="f-stock" type="number" inputmode="numeric" min="0" step="1" value="0">
+          <small class="error" id="e-stock" hidden>Escribe un número de unidades, desde 0.</small>
+        </label>
+      </div>
+      <p class="stock-help" id="f-stock-help"></p>
       <div class="field">
         <span>Foto</span>
         <div class="photo">
@@ -301,6 +384,43 @@
         <span class="spacer"></span>
         <button class="btn btn-ghost" type="button" id="dlg-cancel">Cancelar</button>
         <button class="btn" type="submit" id="dlg-save">Guardar producto</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Cambiar varios productos a la vez -->
+  <dialog id="bulk-dlg" aria-labelledby="bulk-title">
+    <form id="bulk-form" method="dialog" novalidate>
+      <h2 id="bulk-title">Cambiar varios productos</h2>
+      <p class="muted" id="bulk-text"></p>
+      <div class="two">
+        <label class="field">
+          <span>Categoría</span>
+          <input id="b-cat" list="cat-options" autocomplete="off">
+        </label>
+        <label class="field">
+          <span>Subcategoría</span>
+          <input id="b-sub" list="sub-options" autocomplete="off">
+        </label>
+      </div>
+      <label class="field">
+        <span>Marca</span>
+        <input id="b-brand" list="brand-options" autocomplete="off">
+      </label>
+      <label class="field">
+        <span>En la tienda</span>
+        <select id="b-vis">
+          <option value="">No cambiar</option>
+          <option value="show">Mostrar</option>
+          <option value="hide">Ocultar</option>
+        </select>
+      </label>
+      <p class="muted small">Lo que dejes vacío no se cambia. Si cambias la categoría y no escribes subcategoría, la subcategoría anterior se borra.</p>
+      <p class="error" id="bulk-error" role="alert" hidden></p>
+      <div class="dlg-actions">
+        <span class="spacer"></span>
+        <button class="btn btn-ghost" type="button" id="bulk-cancel">Cancelar</button>
+        <button class="btn" type="submit" id="bulk-save">Aplicar cambios</button>
       </div>
     </form>
   </dialog>

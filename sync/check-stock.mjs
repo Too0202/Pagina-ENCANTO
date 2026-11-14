@@ -48,6 +48,10 @@ export function judge(item, cfg) {
   return { available: true, reason: "disponible en el proveedor" };
 }
 
+// Stock propio: unidades que tú tienes. Si hay, el producto se vende aunque el proveedor lo oculte o lo quite.
+export const myStock = (p) => { const n = Math.floor(Number(p.stock)); return Number.isFinite(n) && n > 0 ? n : 0; };
+export const effective = (p) => myStock(p) > 0 || p.supplierAvailable !== false;
+
 async function getJson(url, cfg) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), cfg.timeoutMs ?? 20000);
@@ -130,6 +134,8 @@ async function main() {
   let dirty = false;
   for (const p of data.products) {
     if (!p.supplierId) continue;
+    // Productos creados antes del stock propio: lo que había en "available" era lo que decía el proveedor.
+    if (p.supplierAvailable === undefined) { p.supplierAvailable = p.available !== false; dirty = true; }
     const item = byId.get(String(p.supplierId));
     let verdict;
     if (item && freshIds.has(item.id)) {
@@ -147,12 +153,17 @@ async function main() {
         : { available: null, reason: `no apareció en el catálogo (aviso ${p.missCount} de ${needed})` };
     }
 
-    const before = p.available;
-    if (verdict.available !== null) { p.available = verdict.available; p.lastChecked = now; }
-    const mark = verdict.available === null ? "??" : verdict.available ? "OK" : "AGOTADO";
-    const flip = verdict.available !== null && before !== p.available;
+    // "supplierAvailable" es lo que dice el proveedor. "available" es lo que se muestra en tu tienda:
+    // sigue a la venta si tienes stock propio, aunque el proveedor lo haya ocultado o quitado.
+    const beforeSup = p.supplierAvailable, beforeEff = p.available;
+    if (verdict.available !== null) { p.supplierAvailable = verdict.available; p.lastChecked = now; }
+    p.available = effective(p);
+    const flip = beforeSup !== p.supplierAvailable || beforeEff !== p.available;
     if (flip) changed++;
-    console.log(`[${mark.padEnd(7)}] ${p.name} — ${verdict.reason}${flip ? "  <- CAMBIÓ" : ""}`);
+    const mark = verdict.available === null ? "??" : p.available ? "OK" : "AGOTADO";
+    const own = myStock(p);
+    const note = verdict.available === false && own > 0 ? ` — pero tienes ${own} en stock propio, sigue a la venta` : "";
+    console.log(`[${mark.padEnd(7)}] ${p.name} — ${verdict.reason}${note}${flip ? "  <- CAMBIÓ" : ""}`);
   }
 
   // 3) Guardar solo si algo cambió (evita commits vacíos).

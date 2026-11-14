@@ -7,6 +7,8 @@
     storeName: "Mi tienda", logo: "", brandMode: "name", heroTitle: "Belleza que se nota",
     heroSubtitle: "Productos seleccionados, con disponibilidad actualizada.", whatsapp: "", currency: "COP", locale: "es-CO",
     hideSoldOut: false, theme: { mode: "auto" }, font: "clasica",
+    orderGreeting: "Hola, quiero hacer este pedido:",
+    announcement: { text: "", link: "" }, banners: [],
   };
   const state = {
     repo: "", token: "", branch: "main",
@@ -197,6 +199,33 @@
     return fromCfg?.name || fromCat?.name || `Categoría ${id}`;
   };
 
+  // Misma regla que usa el robot y la tienda: se vende si el proveedor lo tiene o si tú tienes stock propio.
+  const myStock = (p) => { const n = Math.floor(Number(p.stock)); return Number.isFinite(n) && n > 0 ? n : 0; };
+  const supplierHas = (p) => !!p.supplierId && (p.supplierAvailable !== undefined ? p.supplierAvailable !== false : p.available !== false);
+  const isAvailable = (p) => myStock(p) > 0 || supplierHas(p);
+  function statusOf(p) {
+    if (p.hidden) return { key: "hidden", cls: "warn", text: "Oculto" };
+    if (!isAvailable(p)) return { key: "out", cls: "out", text: "Agotado" };
+    if (p.supplierId && !supplierHas(p)) return { key: "own", cls: "ok", text: "A la venta con tu stock" };
+    return { key: "sale", cls: "ok", text: "A la venta" };
+  }
+  const uniq = (arr) => [...new Set(arr.filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
+  // Si ya existe "Cuidado capilar", escribir "cuidado Capilar" usa la forma que ya existe, para no duplicar filtros.
+  const canon = (v, list) => { v = String(v || "").trim().replace(/\s+/g, " "); const k = norm(v); return list.find((x) => norm(x) === k) || v; };
+  function taxonomy() {
+    const cats = new Map(), brands = new Set();
+    for (const p of state.products) {
+      if (p.category) { if (!cats.has(p.category)) cats.set(p.category, new Set()); if (p.subcategory) cats.get(p.category).add(p.subcategory); }
+      if (p.brand) brands.add(p.brand);
+    }
+    return { cats, brands: uniq([...brands]) };
+  }
+  const subsFor = (cat) => { const t = taxonomy(); const k = norm(cat); for (const [c, subs] of t.cats) if (norm(c) === k) return uniq([...subs]); return []; };
+  function guessBrand(name) {
+    const n = " " + norm(name) + " ";
+    return taxonomy().brands.filter((b) => norm(b).length >= 3 && n.includes(" " + norm(b) + " ")).sort((a, b) => b.length - a.length)[0] || "";
+  }
+
   /* ---------- pestañas ---------- */
   const TABS = ["mine", "add", "cats", "look", "access"];
   function setTab(name) {
@@ -213,27 +242,133 @@
     return `<div class="thumb">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : esc((name || "?").trim().charAt(0).toUpperCase())}</div>`;
   }
 
+  const mine = { q: "", cat: "", brand: "", st: "", limit: 50, sel: new Set() };
+
+  function filteredMine() {
+    const q = norm(mine.q).trim();
+    return state.products.filter((p) => {
+      if (mine.cat && p.category !== mine.cat) return false;
+      if (mine.brand && p.brand !== mine.brand) return false;
+      if (q && !norm([p.name, p.brand, p.category, p.subcategory].join(" ")).includes(q)) return false;
+      if (mine.st === "nocat") return !p.category || !p.brand;
+      if (mine.st === "own") return myStock(p) > 0;
+      if (mine.st) return statusOf(p).key === mine.st || (mine.st === "sale" && statusOf(p).key === "own");
+      return true;
+    });
+  }
+
+  function rowHTML(p) {
+    const st = statusOf(p);
+    const n = myStock(p);
+    const where = [p.category, p.subcategory].filter(Boolean).join(" › ");
+    const note = p.supplierId ? (supplierHas(p) ? "" : '<span class="pill warn">El proveedor ya no lo tiene</span>') : '<span class="pill warn">Producto propio</span>';
+    return `<div class="row mrow" data-row="${esc(p.id)}">
+      <label class="pick"><input type="checkbox" data-pick="${esc(p.id)}" ${mine.sel.has(p.id) ? "checked" : ""} aria-label="Elegir ${esc(p.name)}"></label>
+      ${thumb(p.image, p.name)}
+      <div class="row-main">
+        <div class="row-name">${esc(p.name)}</div>
+        <div class="row-sub"><span>${money(p.price)}</span>${p.brand ? `<span>${esc(p.brand)}</span>` : ""}<span>${esc(where || "Sin categoría")}</span>
+          <span class="pill ${st.cls}">${esc(st.text)}</span>${note}</div>
+      </div>
+      <div class="stock" role="group" aria-label="Tu stock de ${esc(p.name)}">
+        <span class="stock-l">Tu stock</span>
+        <button class="step" type="button" data-stock="${esc(p.id)}" data-d="-1" aria-label="Restar una unidad">−</button>
+        <input class="stock-in" type="number" inputmode="numeric" min="0" step="1" value="${n}" data-stockin="${esc(p.id)}" aria-label="Unidades en stock de ${esc(p.name)}">
+        <button class="step" type="button" data-stock="${esc(p.id)}" data-d="1" aria-label="Sumar una unidad">+</button>
+      </div>
+      <button class="btn btn-ghost" type="button" data-edit="${esc(p.id)}">Editar</button>
+    </div>`;
+  }
+
+  function renderBulkBar(total) {
+    const n = mine.sel.size;
+    show($("#bulkbar"), n > 0);
+    $("#bulk-n").textContent = n === 1 ? "1 producto elegido" : `${n} productos elegidos`;
+    const all = $("#m-all");
+    all.checked = total > 0 && n >= total && filteredMine().every((p) => mine.sel.has(p.id));
+    $("#m-all-label").textContent = total ? `Seleccionar los ${total} que ves` : "Seleccionar todos";
+  }
+
   function renderMine() {
     const list = state.products;
-    const out = list.filter((p) => p.available === false).length;
+    const t = taxonomy();
+    const fill = (sel, first, items, cur) => {
+      sel.innerHTML = `<option value="">${first}</option>` + items.map((x) => `<option value="${esc(x)}">${esc(x)}</option>`).join("");
+      sel.value = items.includes(cur) ? cur : "";
+      return sel.value;
+    };
+    mine.cat = fill($("#m-cat"), "Todas", uniq([...t.cats.keys()]), mine.cat);
+    mine.brand = fill($("#m-brand"), "Todas", t.brands, mine.brand);
+    $("#m-state").value = mine.st;
+    show($("#mine-tools"), list.length > 0);
+
+    const out = list.filter((p) => statusOf(p).key === "out").length;
+    const own = list.filter((p) => p.supplierId && !supplierHas(p) && myStock(p) > 0).length;
+    const found = filteredMine();
+    const shown = found.slice(0, mine.limit);
     $("#mine-summary").textContent = list.length
-      ? `${list.length} producto${list.length === 1 ? "" : "s"} en tu tienda, ${out} agotado${out === 1 ? "" : "s"}.`
+      ? `${found.length === list.length ? list.length : found.length + " de " + list.length} producto${list.length === 1 ? "" : "s"} · ${out} agotado${out === 1 ? "" : "s"}` + (own ? ` · ${own} a la venta solo por tu stock` : "")
       : "";
-    show($("#mine-empty"), list.length === 0);
-    $("#mine-list").innerHTML = list.map((p) => {
-      const pill = p.hidden ? '<span class="pill warn">Oculto</span>'
-        : p.available === false ? '<span class="pill out">Agotado</span>'
-        : '<span class="pill ok">Disponible</span>';
-      const link = p.supplierId ? "" : '<span class="pill warn">Sin vínculo con el proveedor</span>';
-      return `<div class="row">
-        ${thumb(p.image, p.name)}
-        <div class="row-main">
-          <div class="row-name">${esc(p.name)}</div>
-          <div class="row-sub"><span>${money(p.price)}</span><span>${esc(p.category || "")}</span>${pill}${link}</div>
-        </div>
-        <button class="btn btn-ghost" type="button" data-edit="${esc(p.id)}">Editar</button>
-      </div>`;
-    }).join("");
+    const filtering = list.length > 0 && found.length === 0;
+    show($("#mine-empty"), found.length === 0);
+    $("#mine-empty-title").textContent = filtering ? "Ningún producto coincide" : "Todavía no tienes productos";
+    $("#mine-empty-text").textContent = filtering ? "Prueba con otra palabra o cambia los filtros." : "Elige productos del catálogo del proveedor o crea uno propio.";
+    show($("#mine-empty-btn"), !filtering);
+    $("#mine-list").innerHTML = shown.map(rowHTML).join("");
+    show($("#mine-more"), found.length > shown.length);
+    $("#mine-more-btn").textContent = `Ver más productos (${found.length - shown.length} restantes)`;
+    renderBulkBar(found.length);
+  }
+
+  /* Stock en la lista: se guarda solo, un momento después del último toque. Los guardados van en fila para no pisarse. */
+  const stockPending = new Map(), stockTimers = new Map();
+  let stockChain = Promise.resolve();
+
+  function refreshRow(id, focusSel) {
+    const p = state.products.find((x) => x.id === id);
+    const el = document.querySelector(`[data-row="${CSS.escape(id)}"]`);
+    if (!p || !el) return;
+    el.outerHTML = rowHTML(p);
+    if (focusSel) document.querySelector(focusSel)?.focus();
+    renderBulkBar(filteredMine().length);
+  }
+
+  function setStock(id, value, focusSel) {
+    const p = state.products.find((x) => x.id === id);
+    if (!p) return;
+    const n = Math.max(0, Math.min(99999, Math.floor(Number(value)) || 0));
+    p.stock = n; p.available = isAvailable(p);
+    stockPending.set(id, n);
+    clearTimeout(stockTimers.get(id));
+    stockTimers.set(id, setTimeout(() => flushStock(id), 700));
+    say("Guardando stock…");
+    refreshRow(id, focusSel);
+  }
+
+  function flushStock(id) {
+    if (!stockPending.has(id)) return;
+    const n = stockPending.get(id); stockPending.delete(id);
+    stockChain = stockChain.then(async () => {
+      try {
+        const next = await updateJson("products.json", (d) => {
+          d.products = (d.products || []).map((p) => {
+            if (p.id !== id) return p;
+            const q = { ...p, stock: n };
+            q.available = isAvailable(q);
+            return q;
+          });
+          return d;
+        }, "Cambiar stock");
+        // lo que el robot cambió llega; lo que todavía no se guardó se conserva
+        state.products = next.products.map((p) => {
+          if (!stockPending.has(p.id)) return p;
+          const q = { ...p, stock: stockPending.get(p.id) }; q.available = isAvailable(q); return q;
+        });
+        if (!stockPending.size) say("Stock guardado. La tienda lo muestra en uno o dos minutos.", "ok");
+        if (state.tab === "mine" && !document.activeElement?.closest?.(".stock")) renderMine();
+      } catch (err) { say(err.message || friendly(0), "bad"); }
+    });
+    return stockChain;
   }
 
   /* ---------- Agregar del proveedor ---------- */
@@ -296,6 +431,112 @@
     $("#rule-qty").checked = state.config.soldOutWhenQuantityAtOrBelow !== null && state.config.soldOutWhenQuantityAtOrBelow !== undefined;
   }
 
+  /* ---------- Anuncio y banners ---------- */
+  const MAX_BANNERS = 8;
+  const linkFromDest = (d) => {
+    if (!d) return "";
+    if (d.type === "cat" && d.c) return "#c=" + encodeURIComponent(d.c) + (d.s ? "&s=" + encodeURIComponent(d.s) : "");
+    if (d.type === "brand" && d.b) return "#b=" + encodeURIComponent(d.b);
+    if (d.type === "url") return String(d.url || "").trim();
+    return "";
+  };
+  const destOf = (b) => {
+    if (b.dest) return b.dest;
+    const l = String(b.link || "");
+    if (!l) return { type: "none" };
+    return /^https?:\/\//i.test(l) ? { type: "url", url: l } : { type: "url", url: l };
+  };
+
+  function bannerHTML(b, i, n, t) {
+    const d = destOf(b);
+    const src = b._url || b.image;
+    const opts = (items, cur, first) => `<option value="">${first}</option>` + items.map((x) => `<option value="${esc(x)}"${x === cur ? " selected" : ""}>${esc(x)}</option>`).join("");
+    const cats = uniq([...t.cats.keys()]);
+    const subs = d.type === "cat" && d.c ? uniq([...(t.cats.get(d.c) || [])]) : [];
+    return `<div class="banner" data-bn="${i}">
+      <div class="banner-head"><strong>Banner ${i + 1}</strong>
+        <span class="spacer"></span>
+        <button class="btn btn-ghost sm" type="button" data-bact="up" ${i === 0 ? "disabled" : ""} aria-label="Subir el banner ${i + 1}">↑</button>
+        <button class="btn btn-ghost sm" type="button" data-bact="down" ${i === n - 1 ? "disabled" : ""} aria-label="Bajar el banner ${i + 1}">↓</button>
+        <button class="btn btn-ghost sm" type="button" data-bact="rm" aria-label="Quitar el banner ${i + 1}">Quitar</button>
+      </div>
+      <div class="banner-img">${src ? `<img src="${esc(src)}" alt="">` : '<span class="muted">Sin imagen</span>'}</div>
+      <label class="field"><span>Imagen (opcional)</span><input type="file" accept="image/*" data-bf="file"></label>
+      ${src ? '<button class="btn btn-ghost sm" type="button" data-bact="rmimg">Quitar imagen</button>' : ""}
+      <label class="field"><span>Título</span><input data-bf="title" value="${esc(b.title || "")}" autocomplete="off"></label>
+      <label class="field"><span>Texto debajo (opcional)</span><input data-bf="subtitle" value="${esc(b.subtitle || "")}" autocomplete="off"></label>
+      <label class="field"><span>Texto del botón</span><input data-bf="buttonText" value="${esc(b.buttonText || "")}" placeholder="Ver más" autocomplete="off"></label>
+      <label class="field"><span>Al tocar el banner lleva a</span>
+        <select data-bf="dtype">
+          <option value="none"${d.type === "none" ? " selected" : ""}>Nada (solo se ve)</option>
+          <option value="cat"${d.type === "cat" ? " selected" : ""}>Una categoría de tu tienda</option>
+          <option value="brand"${d.type === "brand" ? " selected" : ""}>Una marca de tu tienda</option>
+          <option value="url"${d.type === "url" ? " selected" : ""}>Otra página (link)</option>
+        </select></label>
+      ${d.type === "cat" ? `<div class="two"><label class="field"><span>Categoría</span><select data-bf="dc">${opts(cats, d.c, "Elige una categoría")}</select></label>
+        <label class="field"><span>Subcategoría (opcional)</span><select data-bf="ds">${opts(subs, d.s, "Todas")}</select></label></div>` : ""}
+      ${d.type === "brand" ? `<label class="field"><span>Marca</span><select data-bf="db">${opts(t.brands, d.b, "Elige una marca")}</select></label>` : ""}
+      ${d.type === "url" ? `<label class="field"><span>Link</span><input data-bf="durl" value="${esc(d.url || "")}" placeholder="https://" spellcheck="false" autocomplete="off"></label>` : ""}
+    </div>`;
+  }
+
+  function renderBanners() {
+    const list = state.draft.banners;
+    const t = taxonomy();
+    $("#banners").innerHTML = list.map((b, i) => bannerHTML(b, i, list.length, t)).join("");
+    $("#banner-add").disabled = list.length >= MAX_BANNERS;
+    $("#banner-add").textContent = list.length >= MAX_BANNERS ? `Máximo ${MAX_BANNERS} banners` : "Agregar banner";
+  }
+
+  function bindBanners() {
+    const host = $("#banners");
+    const target = (e) => { const c = e.target.closest("[data-bn]"); return c ? { i: Number(c.dataset.bn), b: state.draft.banners[Number(c.dataset.bn)] } : null; };
+    const dropUrl = (b) => { if (b._url) { URL.revokeObjectURL(b._url); delete b._url; } };
+    host.addEventListener("input", (e) => {
+      const t = target(e); const k = e.target.dataset.bf;
+      if (!t || !k || e.target.type === "file" || e.target.tagName === "SELECT") return;
+      if (k === "durl") { t.b.dest = { type: "url", url: e.target.value }; t.b.link = linkFromDest(t.b.dest); }
+      else t.b[k] = e.target.value;
+      show($("#banners-error"), false); renderPreview();
+    });
+    host.addEventListener("change", (e) => {
+      const t = target(e); const k = e.target.dataset.bf;
+      if (!t || !k) return;
+      const d = { ...destOf(t.b) };
+      if (k === "file") {
+        const file = e.target.files[0]; if (!file) return;
+        dropUrl(t.b); t.b._file = file; t.b._url = URL.createObjectURL(file);
+        renderBanners(); renderPreview(); return;
+      }
+      if (k === "dtype") t.b.dest = { type: e.target.value };
+      else if (k === "dc") t.b.dest = { type: "cat", c: e.target.value };
+      else if (k === "ds") t.b.dest = { type: "cat", c: d.c, s: e.target.value };
+      else if (k === "db") t.b.dest = { type: "brand", b: e.target.value };
+      else return;
+      t.b.link = linkFromDest(t.b.dest);
+      renderBanners(); renderPreview();
+    });
+    host.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-bact]"); const t = target(e);
+      if (!btn || !t) return;
+      const list = state.draft.banners, a = btn.dataset.bact;
+      if (a === "rm") { dropUrl(t.b); list.splice(t.i, 1); }
+      else if (a === "rmimg") { dropUrl(t.b); delete t.b._file; t.b.image = ""; }
+      else if (a === "up" && t.i > 0) [list[t.i - 1], list[t.i]] = [list[t.i], list[t.i - 1]];
+      else if (a === "down" && t.i < list.length - 1) [list[t.i + 1], list[t.i]] = [list[t.i], list[t.i + 1]];
+      renderBanners(); renderPreview();
+    });
+    $("#banner-add").addEventListener("click", () => {
+      if (state.draft.banners.length >= MAX_BANNERS) return;
+      state.draft.banners.push({ image: "", title: "", subtitle: "", buttonText: "", link: "", dest: { type: "none" } });
+      renderBanners(); host.querySelector(`[data-bn="${state.draft.banners.length - 1}"] [data-bf="title"]`)?.focus();
+    });
+    $("#l-ann").addEventListener("input", (e) => { state.draft.announcement.text = e.target.value; renderPreview(); });
+    $("#l-ann-link").addEventListener("input", (e) => { state.draft.announcement.link = e.target.value; show($("#e-annlink"), false); });
+  }
+
+  const okLink = (l) => !l || /^https?:\/\/\S+$/i.test(l) || l.startsWith("#");
+
   /* ---------- Apariencia ---------- */
   let lookBuilt = false;
   const DEFAULT_COLORS = T.PALETTES[0];
@@ -326,6 +567,9 @@
     $("#l-hero").value = d.heroTitle || "";
     $("#l-sub").value = d.heroSubtitle || "";
     $("#l-wa").value = d.whatsapp || "";
+    $("#l-greet").value = d.orderGreeting || "";
+    $("#l-ann").value = d.announcement?.text || "";
+    $("#l-ann-link").value = d.announcement?.link || "";
     $("#l-hide").checked = !!d.hideSoldOut;
     document.querySelectorAll('input[name="brandMode"]').forEach((r) => { r.checked = r.value === (d.brandMode || "name"); });
     const c = themeColors(d);
@@ -350,8 +594,14 @@
       <div class="media"><span class="ph" aria-hidden="true">${esc(name[0])}</span>${out ? '<span class="badge">Agotado</span>' : ""}</div>
       <div class="body"><span class="cat">Cejas</span><h4 class="name">${esc(name)}</h4><span class="price">${money(price)}</span></div>
       <div class="actions">${out ? '<span class="btn" aria-disabled="true">No disponible por ahora</span>' : '<span class="btn">Pedir por WhatsApp</span>'}</div></article>`;
-    el.innerHTML = `<div class="p-top"><span class="brand">${T.brandHTML(d, logoSrc)}</span><span class="btn btn-ghost">Escríbenos</span></div>
-      <div class="p-hero"><h3>${esc(d.heroTitle)}</h3><p>${esc(d.heroSubtitle)}</p></div>
+    const ann = String(d.announcement?.text || "").trim();
+    const b0 = (d.banners || []).find((b) => b && (b.image || b.title));
+    const bsrc = b0 && (b0._url || b0.image);
+    const stage = b0
+      ? `<div class="p-slide${bsrc ? " has-img" : ""}">${bsrc ? `<img src="${esc(bsrc)}" alt="">` : ""}<div class="p-slide-body">${b0.title ? `<h3>${esc(b0.title)}</h3>` : ""}${b0.subtitle ? `<p>${esc(b0.subtitle)}</p>` : ""}${b0.link ? `<span class="btn">${esc(b0.buttonText || "Ver más")}</span>` : ""}</div></div>`
+      : `<div class="p-hero"><h3>${esc(d.heroTitle)}</h3><p>${esc(d.heroSubtitle)}</p></div>`;
+    el.innerHTML = `${ann ? `<div class="p-ann">${esc(ann)}</div>` : ""}<div class="p-top"><span class="brand">${T.brandHTML(d, logoSrc)}</span><span class="btn btn-ghost">Escríbenos</span></div>
+      ${stage}
       <div class="p-grid">${card("Producto de ejemplo", 25000, false)}${card("Producto agotado", 18000, true)}</div>`;
     const w = T.warnings(d.theme);
     const warn = $("#theme-warn");
@@ -362,7 +612,10 @@
   function renderLook() {
     buildLookUI();
     if (!state.draft) state.draft = structuredClone(state.site);
+    state.draft.banners = Array.isArray(state.draft.banners) ? state.draft.banners : [];
+    state.draft.announcement = state.draft.announcement || { text: "", link: "" };
     syncLookInputs();
+    renderBanners();
     renderPreview();
   }
 
@@ -371,8 +624,9 @@
   }
 
   const bindLook = () => {
+    bindBanners();
     const live = (id, key) => $(id).addEventListener("input", (e) => { state.draft[key] = e.target.value; renderPreview(); });
-    live("#l-name", "storeName"); live("#l-hero", "heroTitle"); live("#l-sub", "heroSubtitle"); live("#l-wa", "whatsapp");
+    live("#l-name", "storeName"); live("#l-hero", "heroTitle"); live("#l-sub", "heroSubtitle"); live("#l-wa", "whatsapp"); live("#l-greet", "orderGreeting");
     $("#l-name").addEventListener("input", () => show($("#e-lname"), false));
     $("#l-wa").addEventListener("input", () => show($("#e-wa"), false));
     $("#l-hide").addEventListener("change", (e) => { state.draft.hideSoldOut = e.target.checked; });
@@ -416,19 +670,45 @@
       if (!String(d.storeName || "").trim()) { show($("#e-lname"), true); bad = true; $("#l-name").focus(); }
       const wa = String(d.whatsapp || "").replace(/[\s+\-()]/g, "");
       if (!/^\d{8,15}$/.test(wa)) { show($("#e-wa"), true); if (!bad) $("#l-wa").focus(); bad = true; }
+      const ann = d.announcement || { text: "", link: "" };
+      if (!okLink(String(ann.link || "").trim()) || String(ann.link || "").startsWith("#")) { show($("#e-annlink"), true); if (!bad) $("#l-ann-link").focus(); bad = true; }
+      show($("#banners-error"), false);
+      for (const [i, b] of (d.banners || []).entries()) {
+        const dest = destOf(b);
+        let msg = "";
+        if (!b.image && !b._file && !String(b.title || "").trim()) msg = `El banner ${i + 1} necesita una imagen o un título.`;
+        else if (dest.type === "cat" && !dest.c) msg = `En el banner ${i + 1} elige la categoría a la que lleva.`;
+        else if (dest.type === "brand" && !dest.b) msg = `En el banner ${i + 1} elige la marca a la que lleva.`;
+        else if (dest.type === "url" && !/^https?:\/\/\S+$/i.test(String(dest.url || "").trim())) msg = `El link del banner ${i + 1} debe empezar por https:// o http://`;
+        if (msg) { showErr("#banners-error", msg); bad = true; break; }
+      }
       if (bad) return;
       const btn = $("#look-save");
       btn.disabled = true; btn.textContent = "Guardando…";
       try {
         let logo = d.logo;
         if (state.logoFile) logo = await uploadImage(state.logoFile, { type: "image/png", max: 480, prefix: "logo-", message: "Subir logo" });
-        const next = { ...d, storeName: d.storeName.trim(), whatsapp: wa, logo };
+        const banners = [];
+        for (const [i, b] of d.banners.entries()) {
+          let image = b.image || "";
+          if (b._file) image = await uploadImage(b._file, { max: 1800, prefix: `banner-${i}-`, message: "Subir banner" });
+          const dest = destOf(b);
+          banners.push({
+            image, title: String(b.title || "").trim(), subtitle: String(b.subtitle || "").trim(), buttonText: String(b.buttonText || "").trim(),
+            link: linkFromDest(dest), dest: dest.type === "none" ? { type: "none" } : { ...dest, ...(dest.type === "url" ? { url: String(dest.url).trim() } : {}) },
+          });
+        }
+        const announcement = { text: String(ann.text || "").trim(), link: String(ann.link || "").trim() };
+        const next = { ...d, banners, announcement, storeName: d.storeName.trim(), whatsapp: wa, logo, orderGreeting: String(d.orderGreeting || "").trim() || DEFAULT_SITE.orderGreeting };
         const saved = await updateJson("site.json", () => next, "Cambiar apariencia de la tienda");
         state.site = { ...DEFAULT_SITE, ...saved };
+        for (const b of d.banners) if (b._url) URL.revokeObjectURL(b._url);
         state.draft = structuredClone(state.site);
+        state.draft.banners = state.draft.banners || [];
+        state.draft.announcement = state.draft.announcement || { text: "", link: "" };
         state.logoFile = null; if (state.logoUrl) URL.revokeObjectURL(state.logoUrl); state.logoUrl = "";
         $("#l-logo-file").value = "";
-        syncLookInputs(); renderPreview();
+        syncLookInputs(); renderBanners(); renderPreview();
         say("Guardado. Los cambios se ven en tu tienda en uno o dos minutos.", "ok");
       } catch (err) { showErr("#look-error", err.message || friendly(0)); }
       finally { btn.disabled = false; btn.textContent = "Guardar apariencia"; }
@@ -472,7 +752,7 @@
 
   /* ---------- Diálogo de producto ---------- */
   const dlg = $("#dlg");
-  const f = { name: $("#f-name"), cat: $("#f-cat"), price: $("#f-price"), image: $("#f-image"), file: $("#f-file"), hidden: $("#f-hidden"), preview: $("#f-preview") };
+  const f = { name: $("#f-name"), cat: $("#f-cat"), sub: $("#f-sub"), brand: $("#f-brand"), stock: $("#f-stock"), price: $("#f-price"), image: $("#f-image"), file: $("#f-file"), hidden: $("#f-hidden"), preview: $("#f-preview") };
 
   function setPreview() {
     const src = f.image.value.trim();
@@ -480,26 +760,50 @@
     if (src) f.preview.src = src;
   }
 
+  function stockHelp() {
+    const d = state.dlg; if (!d) return;
+    const n = Math.floor(Number(f.stock.value)) || 0;
+    let t;
+    if (!d.linked) t = n > 0 ? `Producto propio: se vende mientras tengas ${n} unidad${n === 1 ? "" : "es"}.` : "Producto propio: con 0 unidades aparece como agotado.";
+    else if (n > 0) t = `Se seguirá vendiendo aunque el proveedor lo oculte o lo quite, mientras tengas ${n} unidad${n === 1 ? "" : "es"} aquí.`;
+    else t = "Con 0 sigue lo que diga el proveedor: si lo oculta o lo quita, desaparece de tu tienda.";
+    if (d.linked) t += d.supplierOk ? " Ahora el proveedor lo tiene." : " Ahora el proveedor no lo tiene.";
+    $("#f-stock-help").textContent = t;
+  }
+  const fillSubs = (catInput, listId) => {
+    $(listId).innerHTML = subsFor(catInput.value).map((x) => `<option value="${esc(x)}">`).join("");
+  };
+
   function openDialog(mode, data) {
-    state.dlg = { mode, id: data.id, supplier: data.supplier };
-    $("#dlg-title").textContent = mode === "add" ? "Agregar a tu tienda" : "Editar producto";
-    $("#dlg-supplier").textContent = data.supplierName ? `Producto del proveedor: ${data.supplierName}` : "";
+    state.dlg = { mode, id: data.id, supplier: data.supplier, linked: mode !== "own" && !!(data.supplier || data.supplierName || data.linked), supplierOk: data.supplierOk };
+    $("#dlg-title").textContent = mode === "add" ? "Agregar a tu tienda" : mode === "own" ? "Crear producto propio" : "Editar producto";
+    $("#dlg-supplier").textContent = mode === "own" ? "Un producto que no viene del proveedor. Se vende solo mientras tengas stock." : data.supplierName ? `Producto del proveedor: ${data.supplierName}` : "";
     f.name.value = data.name || "";
     f.cat.value = data.category || "";
+    f.sub.value = data.subcategory || "";
+    f.brand.value = data.brand || guessBrand(data.name || "");
+    f.stock.value = data.stock ?? 0;
     f.price.value = data.price ?? "";
     f.image.value = data.image || "";
     f.file.value = "";
     f.hidden.checked = !!data.hidden;
-    $("#cat-options").innerHTML = [...new Set([...state.products.map((p) => p.category), ...state.config.categories.map((c) => categoryLabel(c.id))].filter(Boolean))]
-      .map((c) => `<option value="${esc(c)}">`).join("");
-    for (const id of ["e-name", "e-price", "dlg-error"]) show($("#" + id), false);
-    f.name.removeAttribute("aria-invalid"); f.price.removeAttribute("aria-invalid");
+    const t = taxonomy();
+    $("#cat-options").innerHTML = uniq([...t.cats.keys(), ...state.config.categories.map((c) => categoryLabel(c.id))]).map((c) => `<option value="${esc(c)}">`).join("");
+    $("#brand-options").innerHTML = t.brands.map((c) => `<option value="${esc(c)}">`).join("");
+    fillSubs(f.cat, "#sub-options");
+    for (const id of ["e-name", "e-price", "e-stock", "dlg-error"]) show($("#" + id), false);
+    for (const k of ["name", "price", "stock"]) f[k].removeAttribute("aria-invalid");
     show($("#dlg-remove"), mode === "edit");
     $("#dlg-save").disabled = false;
+    stockHelp();
     setPreview();
     dlg.showModal();
     f.name.focus();
   }
+
+  f.cat.addEventListener("input", () => fillSubs(f.cat, "#sub-options"));
+  f.stock.addEventListener("input", () => { show($("#e-stock"), false); f.stock.removeAttribute("aria-invalid"); stockHelp(); });
+  $("#b-cat").addEventListener("input", () => fillSubs($("#b-cat"), "#sub-options"));
 
   f.name.addEventListener("input", () => { show($("#e-name"), false); f.name.removeAttribute("aria-invalid"); });
   f.price.addEventListener("input", () => { show($("#e-price"), false); f.price.removeAttribute("aria-invalid"); });
@@ -517,33 +821,50 @@
     let bad = false;
     if (!name) { show($("#e-name"), true); f.name.setAttribute("aria-invalid", "true"); bad = true; }
     if (!(price > 0)) { show($("#e-price"), true); f.price.setAttribute("aria-invalid", "true"); bad = true; }
-    if (bad) { (!name ? f.name : f.price).focus(); return; }
+    const stockRaw = String(f.stock.value).trim();
+    const stock = stockRaw === "" ? 0 : Number(stockRaw);
+    const stockBad = !Number.isInteger(stock) || stock < 0 || stock > 99999;
+    if (stockBad) { show($("#e-stock"), true); f.stock.setAttribute("aria-invalid", "true"); bad = true; }
+    if (bad) { (!name ? f.name : !(price > 0) ? f.price : f.stock).focus(); return; }
 
     const btn = $("#dlg-save");
     btn.disabled = true; btn.textContent = "Guardando…";
     try {
       let image = f.image.value.trim();
       if (f.file.files[0]) image = await uploadImage(f.file.files[0], { message: "Subir foto de producto" });
-      const base = { name, category: f.cat.value.trim(), price, image, hidden: f.hidden.checked || undefined };
+      const t = taxonomy();
+      const category = canon(f.cat.value, [...t.cats.keys()]);
+      const subcategory = canon(f.sub.value, subsFor(category));
+      const brand = canon(f.brand.value, t.brands);
+      const base = { name, category, subcategory, brand, price, image, stock, hidden: f.hidden.checked || undefined };
 
       if (state.dlg.mode === "add") {
         const s = state.dlg.supplier;
         const rec = {
           id: "p" + s.id, supplierId: s.id, supplierName: s.name, ...base,
-          available: availability(s).ok, lastChecked: null,
+          supplierAvailable: availability(s).ok, lastChecked: null,
         };
+        rec.available = isAvailable(rec);
+        for (const k of ["subcategory", "brand", "hidden"]) if (!rec[k]) delete rec[k];
         const next = await updateJson("products.json", (d) => {
           d.products = d.products || [];
           if (!d.products.some((p) => p.id === rec.id)) d.products.push(rec);
           return d;
         }, `Agregar ${name}`);
         state.products = next.products;
+      } else if (state.dlg.mode === "own") {
+        const rec = { id: state.dlg.id, ...base };
+        rec.available = isAvailable(rec);
+        for (const k of ["subcategory", "brand", "hidden"]) if (!rec[k]) delete rec[k];
+        const next = await updateJson("products.json", (d) => { d.products = d.products || []; d.products.push(rec); return d; }, `Crear ${name}`);
+        state.products = next.products;
       } else {
         const next = await updateJson("products.json", (d) => {
           d.products = d.products.map((p) => {
             if (p.id !== state.dlg.id) return p;
             const merged = { ...p, ...base };
-            if (!merged.hidden) delete merged.hidden;
+            for (const k of ["subcategory", "brand", "hidden"]) if (!merged[k]) delete merged[k];
+            merged.available = isAvailable(merged);
             return merged;
           });
           return d;
@@ -563,7 +884,7 @@
 
   $("#dlg-remove").addEventListener("click", async () => {
     const p = state.products.find((x) => x.id === state.dlg.id);
-    if (!p || !confirm(`¿Quitar "${p.name}" de tu tienda? Podrás volver a agregarlo desde el catálogo del proveedor.`)) return;
+    if (!p || !confirm(p.supplierId ? `¿Quitar "${p.name}" de tu tienda? Podrás volver a agregarlo desde el catálogo del proveedor.` : `¿Borrar "${p.name}"? Es un producto propio y no se puede recuperar.`)) return;
     try {
       const next = await updateJson("products.json", (d) => { d.products = d.products.filter((x) => x.id !== p.id); return d; }, `Quitar ${p.name}`);
       state.products = next.products;
@@ -582,15 +903,80 @@
     if (t.dataset.goto) setTab(t.dataset.goto);
     if (t.dataset.edit) {
       const p = state.products.find((x) => x.id === t.dataset.edit);
-      if (p) openDialog("edit", { id: p.id, supplierName: p.supplierName, name: p.name, category: p.category, price: p.price, image: p.image, hidden: p.hidden });
+      if (p) openDialog("edit", { id: p.id, supplierName: p.supplierName, linked: !!p.supplierId, supplierOk: supplierHas(p), name: p.name, category: p.category, subcategory: p.subcategory, brand: p.brand, stock: myStock(p), price: p.price, image: p.image, hidden: p.hidden });
     }
     if (t.dataset.add) {
       const s = state.catalog.products.find((x) => x.id === t.dataset.add);
-      if (s) openDialog("add", { supplier: s, supplierName: s.name, name: s.name, category: categoryLabel(s.category), price: "", image: "" });
+      if (s) openDialog("add", { supplier: s, supplierName: s.name, supplierOk: availability(s).ok, name: s.name, category: categoryLabel(s.category), stock: 0, price: "", image: "" });
+    }
+    if (t.dataset.stock) {
+      const p = state.products.find((x) => x.id === t.dataset.stock);
+      if (p) setStock(p.id, myStock(p) + Number(t.dataset.d), `[data-stock="${CSS.escape(p.id)}"][data-d="${t.dataset.d}"]`);
     }
     if (t.dataset.rmcat) removeCategory(t.dataset.rmcat);
   });
   for (const t of TABS) $("#tab-" + t).addEventListener("click", () => setTab(t));
+  $("#m-q").addEventListener("input", (e) => { mine.q = e.target.value; mine.limit = 50; renderMine(); });
+  $("#m-cat").addEventListener("change", (e) => { mine.cat = e.target.value; mine.limit = 50; renderMine(); });
+  $("#m-brand").addEventListener("change", (e) => { mine.brand = e.target.value; mine.limit = 50; renderMine(); });
+  $("#m-state").addEventListener("change", (e) => { mine.st = e.target.value; mine.limit = 50; renderMine(); });
+  $("#mine-more-btn").addEventListener("click", () => { mine.limit += 50; renderMine(); });
+  $("#m-own").addEventListener("click", () => openDialog("own", { id: "own-" + Date.now(), name: "", category: "", stock: 1, price: "", image: "" }));
+  $("#mine-list").addEventListener("change", (e) => {
+    const pick = e.target.dataset.pick, sin = e.target.dataset.stockin;
+    if (pick) { e.target.checked ? mine.sel.add(pick) : mine.sel.delete(pick); renderBulkBar(filteredMine().length); }
+    if (sin) setStock(sin, e.target.value, `[data-stockin="${CSS.escape(sin)}"]`);
+  });
+  $("#m-all").addEventListener("change", (e) => {
+    for (const p of filteredMine()) e.target.checked ? mine.sel.add(p.id) : mine.sel.delete(p.id);
+    renderMine();
+  });
+  $("#bulk-clear").addEventListener("click", () => { mine.sel.clear(); renderMine(); });
+  $("#bulk-edit").addEventListener("click", () => {
+    const n = mine.sel.size; if (!n) return;
+    $("#bulk-text").textContent = `Se cambian ${n} producto${n === 1 ? "" : "s"}.`;
+    for (const id of ["b-cat", "b-sub", "b-brand"]) $("#" + id).value = "";
+    $("#b-vis").value = ""; show($("#bulk-error"), false);
+    const t = taxonomy();
+    $("#cat-options").innerHTML = uniq([...t.cats.keys(), ...state.config.categories.map((c) => categoryLabel(c.id))]).map((c) => `<option value="${esc(c)}">`).join("");
+    $("#brand-options").innerHTML = t.brands.map((c) => `<option value="${esc(c)}">`).join("");
+    $("#sub-options").innerHTML = "";
+    $("#bulk-dlg").showModal(); $("#b-cat").focus();
+  });
+  $("#bulk-cancel").addEventListener("click", () => $("#bulk-dlg").close());
+  $("#bulk-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const t = taxonomy();
+    const cat = $("#b-cat").value.trim() ? canon($("#b-cat").value, [...t.cats.keys()]) : "";
+    const sub = $("#b-sub").value.trim() ? canon($("#b-sub").value, cat ? subsFor(cat) : []) : "";
+    const brand = $("#b-brand").value.trim() ? canon($("#b-brand").value, t.brands) : "";
+    const vis = $("#b-vis").value;
+    if (!cat && !sub && !brand && !vis) { showErr("#bulk-error", "No elegiste nada para cambiar."); return; }
+    if (sub && !cat && ![...mine.sel].every((id) => { const p = state.products.find((x) => x.id === id); return p?.category; })) { showErr("#bulk-error", "Para poner una subcategoría, escribe también la categoría."); return; }
+    const ids = new Set(mine.sel);
+    const btn = $("#bulk-save"); btn.disabled = true; btn.textContent = "Guardando…";
+    try {
+      const next = await updateJson("products.json", (d) => {
+        d.products = (d.products || []).map((p) => {
+          if (!ids.has(p.id)) return p;
+          const q = { ...p };
+          if (cat) { if (norm(cat) !== norm(q.category)) delete q.subcategory; q.category = cat; }
+          if (sub) q.subcategory = sub;
+          if (brand) q.brand = brand;
+          if (vis === "hide") q.hidden = true;
+          if (vis === "show") delete q.hidden;
+          return q;
+        });
+        return d;
+      }, `Cambiar ${ids.size} productos`);
+      state.products = next.products;
+      mine.sel.clear();
+      $("#bulk-dlg").close();
+      say(`Listo: cambiaste ${ids.size} producto${ids.size === 1 ? "" : "s"}. La tienda se actualiza en uno o dos minutos.`, "ok");
+      renderMine();
+    } catch (err) { showErr("#bulk-error", err.message || friendly(0)); }
+    finally { btn.disabled = false; btn.textContent = "Aplicar cambios"; }
+  });
   $("#s-q").addEventListener("input", renderAdd);
   $("#s-cat").addEventListener("change", renderAdd);
   bindLook();
