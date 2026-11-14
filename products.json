@@ -10,8 +10,9 @@
       "price": 17500,
       "image": "",
       "available": true,
-      "lastChecked": null,
-      "stock": 0
+      "lastChecked": "2026-11-14T06:48:39.672Z",
+      "stock": 0,
+      "supplierAvailable": true
     },
     {
       "id": "p439",
@@ -22,7 +23,8 @@
       "price": 20000,
       "image": "",
       "available": true,
-      "lastChecked": null
+      "lastChecked": "2026-11-14T06:48:39.672Z",
+      "supplierAvailable": true
     },
     {
       "id": "p446",
@@ -33,8 +35,9 @@
       "price": 4000,
       "image": "",
       "available": true,
-      "lastChecked": null,
-      "stock": 0
+      "lastChecked": "2026-11-14T06:48:39.672Z",
+      "stock": 0,
+      "supplierAvailable": true
     },
     {
       "id": "p9000",
@@ -45,7 +48,8 @@
       "price": 80000,
       "image": "https://sysvariedades.com.co/sistema/public/images/uploads/products/1783443514_acf212210afb5e5b0d8c.jpg?v=1794500212289",
       "available": true,
-      "lastChecked": null
+      "lastChecked": "2026-11-14T06:48:39.672Z",
+      "supplierAvailable": true
     },
     {
       "id": "p8",
@@ -56,7 +60,8 @@
       "price": 45000,
       "image": "https://sysvariedades.com.co/sistema/public/images/uploads/products/8537.jpg?v=1794526766118",
       "available": true,
-      "lastChecked": null
+      "lastChecked": "2026-11-14T06:48:39.672Z",
+      "supplierAvailable": true
     }
   ]
 }
