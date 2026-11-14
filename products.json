@@ -10,7 +10,8 @@
       "price": 17500,
       "image": "",
       "available": true,
-      "lastChecked": null
+      "lastChecked": null,
+      "stock": 1
     },
     {
       "id": "p439",
