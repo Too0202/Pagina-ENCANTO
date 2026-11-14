@@ -4,10 +4,10 @@
   "brandMode": "name",
   "heroTitle": "Belleza que se nota",
   "heroSubtitle": "Cuidamos tu piel de la mejor manera",
-  "whatsapp": "573243130431",
+  "whatsapp": "573022779632",
   "currency": "COP",
   "locale": "es-CO",
-  "hideSoldOut": false,
+  "hideSoldOut": true,
   "theme": {
     "mode": "custom",
     "preset": "rosa",
@@ -28,6 +28,8 @@
     "image": ""
   },
   "social": {
-    "instagram": "https://www.instagram.com/encanto_s_/?hl=es"
+    "instagram": "https://www.instagram.com/encanto_s_/?hl=es",
+    "facebook": "https://www.facebook.com/share/19iQ5mJmiC/",
+    "tiktok": "https://www.tiktok.com/@encanto8764?_r=1&_t=ZS-9BOseuQQGCE"
   }
 }
