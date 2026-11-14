@@ -15,5 +15,19 @@
     "background": "#fff5f8",
     "text": "#3b2430"
   },
-  "font": "elegante"
+  "font": "elegante",
+  "orderGreeting": "Hola, quiero hacer este pedido:",
+  "announcement": {
+    "text": "10% de descuento en tu primera compra.",
+    "link": ""
+  },
+  "banners": [],
+  "about": {
+    "title": "",
+    "text": "",
+    "image": ""
+  },
+  "social": {
+    "instagram": "https://www.instagram.com/encanto_s_/?hl=es"
+  }
 }
