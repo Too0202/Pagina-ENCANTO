@@ -32,6 +32,7 @@
     { key: "salvia", name: "Salvia", accent: "#4f7a63", background: "#f4f7f3", text: "#22302a" },
     { key: "azul", name: "Azul", accent: "#2f5fa8", background: "#f3f6fb", text: "#1c2733" },
     { key: "coral", name: "Coral", accent: "#d9482b", background: "#fff7f2", text: "#2d2420" },
+    { key: "arena", name: "Arena", accent: "#8a5a3c", background: "#f5ede4", text: "#2b211b" },
   ];
 
   const FONTS = [

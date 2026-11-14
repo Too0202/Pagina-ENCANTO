@@ -5,6 +5,7 @@
     hideSoldOut: false, theme: { mode: "auto" }, font: "clasica",
     orderGreeting: "Hola, quiero hacer este pedido:",
     announcement: { text: "", link: "" }, banners: [],
+    about: { title: "", text: "", image: "" }, social: {},
   };
   const S = { ...DEFAULTS };
   const $ = (id) => document.getElementById(id);
@@ -12,7 +13,7 @@
   const PAGE = 48;
 
   const state = { products: [], f: emptyFilters(), sort: "destacados", shown: PAGE };
-  function emptyFilters() { return { c: "", s: "", b: [], min: "", max: "", q: "", a: false }; }
+  function emptyFilters() { return { c: "", s: "", b: [], min: "", max: "", q: "", a: false, t: "" }; }
 
   const money = (n) =>
     new Intl.NumberFormat(S.locale || "es-CO", { style: "currency", currency: S.currency || "COP", maximumFractionDigits: 0 }).format(n);
@@ -32,6 +33,27 @@
     const m = maxQty(p);
     return m > 0 && m <= 5 && m < MAX_QTY ? `Quedan ${m}` : "";
   };
+
+  // Promociones y kits
+  const onSale = (p) => Number(p.oldPrice) > Number(p.price) && Number(p.price) > 0;
+  const discount = (p) => Math.round((1 - Number(p.price) / Number(p.oldPrice)) * 100);
+  const includes = (p) => (Array.isArray(p.includes) ? p.includes : []).map((x) => String(x).trim()).filter(Boolean);
+  function badgesFor(p, out) {
+    const b = [];
+    if (out) return [["out", "Agotado"]];
+    if (onSale(p)) b.push(["sale", `−${discount(p)}%`]);
+    if (p.kit) b.push(["kit", "Kit"]);
+    if (p.badge === "nuevo") b.push(["new", "Nuevo"]); else if (p.badge === "top") b.push(["top", "Más vendido"]);
+    const m = maxQty(p);
+    if (m > 0 && m <= 5 && m < MAX_QTY) b.push(["low", `Últimas ${m}`]);
+    return b.slice(0, 2);
+  }
+  const badgesHTML = (list) => list.length ? `<div class="badges">${list.map(([k, t]) => `<span class="badge b-${k}">${esc(t)}</span>`).join("")}</div>` : "";
+  const priceHTML = (p, big) => `<div class="prices${big ? " big" : ""}"><span class="price">${money(p.price)}</span>${onSale(p) ? `<s class="old"><span class="sr-only">Antes </span>${money(p.oldPrice)}</s>` : ""}</div>`;
+  const PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+  const monogram = () => (S.storeName || "•").trim().charAt(0).toUpperCase();
+  const placeholder = () => `<span class="ph" aria-hidden="true">${S.logo ? `<img src="${esc(S.logo)}" alt="" onerror="this.replaceWith(document.createTextNode('${esc(monogram())}'))">` : `<b>${esc(monogram())}</b>`}<i>Foto próximamente</i></span>`;
+  const mediaImg = (p, eager) => p.image ? `<img class="pimg" src="${esc(p.image)}" alt="" ${eager ? "" : 'loading="lazy" '}onload="this.classList.add('ld')" onerror="this.remove()">` : "";
 
   /* ---------- carrito (se guarda en este navegador) ---------- */
   const CART_KEY = "tienda-carrito-v1";
@@ -95,25 +117,24 @@
   function card(p) {
     const out = !isAvailable(p);
     const q = cart.items[p.id] || 0;
-    const media = p.image
-      ? `<img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy">`
-      : `<span class="ph" aria-hidden="true">${esc(p.name.trim().charAt(0).toUpperCase())}</span>`;
-    const action = out
-      ? `<span class="btn" role="button" aria-disabled="true">No disponible por ahora</span>`
-      : q
-        ? stepper(p, q, false)
-        : `<button class="btn" type="button" data-act="add" data-id="${esc(p.id)}" aria-label="Agregar ${esc(p.name)} al carrito">Agregar al carrito</button>`;
-    const note = !out ? lowStockNote(p) : "";
+    const control = out ? ""
+      : q ? `<div class="step-over">${stepper(p, q, false)}</div>`
+      : `<button class="add" type="button" data-act="add" data-id="${esc(p.id)}" aria-label="Agregar ${esc(p.name)} al carrito">${PLUS}</button>`;
+    const inc = p.kit ? includes(p) : [];
     return `
-      <article class="card${out ? " out" : ""}">
-        <div class="media">${media}${out ? '<span class="badge">Agotado</span>' : ""}</div>
+      <article class="card${out ? " out" : ""}${p.image ? "" : " nophoto"}">
+        <div class="media">
+          ${placeholder()}${mediaImg(p)}
+          <button class="open" type="button" data-open="${esc(p.id)}" aria-label="Ver ${esc(p.name)}"></button>
+          ${badgesHTML(badgesFor(p, out))}
+          ${control}
+        </div>
         <div class="body">
           <span class="cat">${esc([p.brand, p.subcategory || p.category].filter(Boolean).join(" · "))}</span>
-          <h3 class="name">${esc(p.name)}</h3>
-          <span class="price">${money(p.price)}</span>
-          ${note ? `<span class="stocknote">${note}</span>` : ""}
+          <h3 class="name"><button type="button" class="namebtn" data-open="${esc(p.id)}">${esc(p.name)}</button></h3>
+          ${inc.length ? `<span class="inc">Incluye ${esc(inc.slice(0, 3).join(", "))}${inc.length > 3 ? "…" : ""}</span>` : ""}
+          ${priceHTML(p)}
         </div>
-        <div class="actions">${action}</div>
       </article>`;
   }
 
@@ -128,6 +149,8 @@
     if (f.min !== "" && p.price < Number(f.min)) return false;
     if (f.max !== "" && p.price > Number(f.max)) return false;
     if (f.a && !isAvailable(p)) return false;
+    if (f.t === "promo" && !onSale(p)) return false;
+    if (f.t === "kit" && !p.kit) return false;
     if (f.q) {
       const hay = norm([p.name, p.brand, p.category, p.subcategory].filter(Boolean).join(" "));
       if (!norm(f.q).split(/\s+/).every((w) => hay.includes(w))) return false;
@@ -184,6 +207,14 @@
         h += `<li><label class="fcheck"><input type="checkbox" data-brand="${esc(b)}" data-fk="b-${esc(b)}"${f.b.includes(b) ? " checked" : ""}><span>${esc(b)}</span><em>${n}</em></label></li>`;
       h += `</ul></div>`;
     }
+    const nPromo = base.filter((p) => onSale(p) && isAvailable(p)).length, nKit = base.filter((p) => p.kit && isAvailable(p)).length;
+    if (nPromo || nKit || f.t) {
+      h += `<div class="fgroup"><h3>Especiales</h3><ul class="flist">
+        <li><button type="button" class="fopt${!f.t ? " on" : ""}" data-fk="t-all" data-set-t="" aria-pressed="${!f.t}">Todo</button></li>
+        ${nPromo ? `<li><button type="button" class="fopt${f.t === "promo" ? " on" : ""}" data-fk="t-promo" data-set-t="promo" aria-pressed="${f.t === "promo"}">Promociones <span>${nPromo}</span></button></li>` : ""}
+        ${nKit ? `<li><button type="button" class="fopt${f.t === "kit" ? " on" : ""}" data-fk="t-kit" data-set-t="kit" aria-pressed="${f.t === "kit"}">Kits <span>${nKit}</span></button></li>` : ""}
+      </ul></div>`;
+    }
     h += `<div class="fgroup"><h3>Precio</h3><div class="prange">
         <label>Desde<input type="number" inputmode="numeric" min="0" step="1000" data-price="min" data-fk="min" value="${esc(f.min)}"></label>
         <label>Hasta<input type="number" inputmode="numeric" min="0" step="1000" data-price="max" data-fk="max" value="${esc(f.max)}"></label>
@@ -213,6 +244,7 @@
     f.b.forEach((b) => t.push(["b:" + b, b]));
     if (f.min !== "" || f.max !== "") t.push(["price", f.min !== "" && f.max !== "" ? `${money(f.min)} – ${money(f.max)}` : f.min !== "" ? `Desde ${money(f.min)}` : `Hasta ${money(f.max)}`]);
     if (f.a) t.push(["a", "Solo disponibles"]);
+    if (f.t) t.push(["t", f.t === "promo" ? "Promociones" : "Kits"]);
     if (f.q) t.push(["q", `“${f.q}”`]);
     return t;
   }
@@ -221,6 +253,7 @@
     const all = sorted(visible());
     const list = all.slice(0, state.shown);
     $("grid").innerHTML = list.map(card).join("");
+    renderHighlights();
     $("empty").hidden = all.length > 0;
     $("more").hidden = all.length <= list.length;
     $("meta").textContent = all.length ? plural(all.length, "producto", "productos") : "";
@@ -242,6 +275,7 @@
     if (f.max !== "") p.push("max=" + encodeURIComponent(f.max));
     if (f.q) p.push("q=" + encodeURIComponent(f.q));
     if (f.a) p.push("a=1");
+    if (f.t) p.push("t=" + f.t);
     return p.join("&");
   }
   function hashToFilters(h) {
@@ -260,6 +294,7 @@
       else if (k === "max" && v !== "" && !isNaN(v)) f.max = get(v);
       else if (k === "q") f.q = get(v);
       else if (k === "a") f.a = v === "1";
+      else if (k === "t") f.t = v === "promo" || v === "kit" ? v : "";
     }
     return f;
   }
@@ -277,9 +312,9 @@
     state.shown = PAGE;
     $("q").value = state.f.q;
     renderFilters(); renderGrid();
-    if (scroll && location.hash.length > 1) goCatalog();
+    if (scroll && /=/.test(location.hash)) goCatalog();
   }
-  window.addEventListener("hashchange", () => { if (!fromUs) applyHash(true); });
+  window.addEventListener("hashchange", () => { if (!fromUs && (/=/.test(location.hash) || location.hash.length <= 1)) applyHash(true); });
   function goCatalog() {
     const el = $("catalogo");
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -289,7 +324,9 @@
   function onFilterClick(e) {
     const t = e.target;
     const cb = t.closest("button[data-set-c]");
-    if (cb) { state.f.c = cb.dataset.setC; state.f.s = cb.dataset.setS || ""; commitFilters(); }
+    if (cb) { state.f.c = cb.dataset.setC; state.f.s = cb.dataset.setS || ""; commitFilters(); return; }
+    const tb = t.closest("button[data-set-t]");
+    if (tb) { state.f.t = tb.dataset.setT; commitFilters(); }
   }
   function onFilterChange(e) {
     const t = e.target;
@@ -317,6 +354,7 @@
     else if (k === "s") f.s = "";
     else if (k === "price") { f.min = ""; f.max = ""; }
     else if (k === "a") f.a = false;
+    else if (k === "t") f.t = "";
     else if (k === "q") { f.q = ""; $("q").value = ""; }
     else if (k.startsWith("b:")) f.b = f.b.filter((x) => x !== k.slice(2));
     commitFilters();
@@ -367,17 +405,22 @@
     updateSendLink();
   }
   function updateSendLink() { $("cart-send").href = `https://wa.me/${S.whatsapp}?text=${encodeURIComponent(orderText())}`; }
+  let lastUnits = null;
   function renderBar() {
     const n = units();
     $("cart-count").textContent = n;
     $("cart-count").setAttribute("aria-label", `${plural(n, "producto", "productos")} en el carrito`);
     $("cart-bar").hidden = n === 0;
+    document.body.classList.toggle("has-bar", n > 0);
+    if (lastUnits !== null && n > lastUnits) { const c = $("cart-count"); c.classList.remove("bump"); void c.offsetWidth; c.classList.add("bump"); }
+    lastUnits = n;
     $("bar-text").textContent = `${plural(n, "producto", "productos")} · ${money(total())}`;
   }
   function renderAll(focus) {
     renderGrid(); renderBar(); renderCartDialog();
+    if (pd.open && byId(pdId)) renderDetailInfo(byId(pdId));
     if (focus && focus.id) {
-      const root = dlg.open ? dlg : $("grid");
+      const root = dlg.open ? dlg : pd.open ? pd : $("grid");
       const el = root.querySelector(`[data-id="${CSS.escape(focus.id)}"][data-act="${focus.act}"]`)
         || root.querySelector(`[data-id="${CSS.escape(focus.id)}"]:not([disabled])`);
       if (el) el.focus();
@@ -385,15 +428,20 @@
     }
   }
   function onAction(e) {
+    const o = e.target.closest("[data-open]");
+    if (o) { openDetail(o.dataset.open); return; }
+    const tl = e.target.closest("[data-set-t-link]");
+    if (tl) { state.f = emptyFilters(); state.f.t = tl.dataset.setTLink; $("q").value = ""; commitFilters(); goCatalog(); return; }
     const b = e.target.closest("button[data-act]");
     if (!b) return;
     const id = b.dataset.id, q = cart.items[id] || 0;
-    if (b.dataset.act === "add") setQty(id, 1, "inc");
+    if (b.dataset.act === "add") { setQty(id, 1, "inc"); toast(`${byId(id)?.name || "Producto"} agregado al carrito`); }
     else if (b.dataset.act === "inc") setQty(id, q + 1, "inc");
     else if (b.dataset.act === "dec") setQty(id, q - 1, q - 1 > 0 ? "dec" : "add");
     else if (b.dataset.act === "remove") setQty(id, 0, "add");
   }
   $("grid").addEventListener("click", onAction);
+  $("highlights").addEventListener("click", onAction);
   $("cart-list").addEventListener("click", onAction);
   const openCart = () => { renderCartDialog(); $("cart-name").value = cart.name; $("cart-notes").value = cart.notes; dlg.showModal(); };
   $("cart-btn").addEventListener("click", openCart);
@@ -407,6 +455,111 @@
     if (!confirm("¿Vaciar tu carrito? Se quitarán todos los productos.")) return;
     cart.items = {}; saveCart(); renderAll(); $("cart-continue").focus();
   });
+
+
+  /* ---------- avisos breves ---------- */
+  let toastTimer;
+  function toast(msg) {
+    const t = $("toast");
+    t.textContent = msg; t.classList.add("on");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove("on"), 2200);
+  }
+
+  /* ---------- promociones, kits y categorías destacadas ---------- */
+  function renderHighlights() {
+    const host = $("highlights");
+    if (activeTags().length || state.sort !== "destacados") { host.innerHTML = ""; return; }
+    const base = baseProducts().filter(isAvailable);
+    const strip = (title, list, t) => list.length
+      ? `<section class="strip" aria-label="${title}"><div class="strip-head"><h2>${title}</h2><button class="link" type="button" data-set-t-link="${t}">Ver todo</button></div><div class="strip-row">${list.slice(0, 12).map(card).join("")}</div></section>` : "";
+    host.innerHTML = strip("Promociones", base.filter((p) => onSale(p) && !p.kit), "promo") + strip("Kits", base.filter((p) => p.kit), "kit");
+  }
+
+  function renderQuick() {
+    const cats = new Map();
+    baseProducts().forEach((p) => { if (p.category) cats.set(p.category, (cats.get(p.category) || 0) + 1); });
+    const top = [...cats].sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const el = $("quick");
+    el.hidden = top.length < 2;
+    el.innerHTML = top.map(([c, n]) => `<a class="qtile" href="#c=${encodeURIComponent(c)}"><span class="q-name">${esc(c)}</span><span class="q-n">${plural(n, "producto", "productos")}</span><span class="q-go" aria-hidden="true">→</span></a>`).join("");
+  }
+
+  /* ---------- detalle del producto con foto ampliable ---------- */
+  const pd = $("pd");
+  let pdId = null;
+  const waLink = (text) => `https://wa.me/${S.whatsapp}${text ? "?text=" + encodeURIComponent(text) : ""}`;
+
+  function renderDetailInfo(p) {
+    const out = !isAvailable(p), q = cart.items[p.id] || 0;
+    const inc = p.kit ? includes(p) : [];
+    const where = [p.brand, p.category, p.subcategory].filter(Boolean).join(" · ");
+    $("pd-info").innerHTML = `
+      ${where ? `<p class="pd-cat">${esc(where)}</p>` : ""}
+      <h2 id="pd-name">${esc(p.name)}</h2>
+      ${priceHTML(p, true)}
+      ${badgesHTML(badgesFor(p, out))}
+      ${p.description ? `<div class="pd-desc">${String(p.description).split(/\n+/).filter((x) => x.trim()).map((x) => `<p>${esc(x)}</p>`).join("")}</div>` : ""}
+      ${inc.length ? `<h3 class="pd-sub">Este kit incluye</h3><ul class="pd-inc">${inc.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+      <div class="pd-actions">
+        ${out ? '<span class="btn" role="button" aria-disabled="true">No disponible por ahora</span>'
+          : q ? stepper(p, q, false)
+          : `<button class="btn" type="button" data-act="add" data-id="${esc(p.id)}">Agregar al carrito</button>`}
+        <a class="btn btn-ghost" target="_blank" rel="noopener" href="${esc(waLink(`Hola, quiero que me asesoren con: ${p.name}`))}">Asesórame sobre este producto</a>
+      </div>`;
+  }
+
+  function openDetail(id) {
+    const p = byId(id);
+    if (!p) return;
+    pdId = id;
+    $("pd-media").innerHTML = p.image
+      ? `<button type="button" class="zoomwrap" id="zoom" aria-pressed="false" aria-label="Ampliar la foto">${placeholder()}<img class="pimg ld" src="${esc(p.image)}" alt="${esc(p.name)}" onerror="this.remove()"><span class="zoom-hint" aria-hidden="true">Toca para ampliar</span></button>`
+      : `<div class="zoomwrap static nophoto">${placeholder()}</div>`;
+    const z = $("zoom");
+    if (z) {
+      const set = (on) => { z.classList.toggle("zoomed", on); z.setAttribute("aria-pressed", String(on)); z.setAttribute("aria-label", on ? "Reducir la foto" : "Ampliar la foto"); };
+      z.addEventListener("click", (e) => { move(e); set(!z.classList.contains("zoomed")); });
+      const move = (e) => { const r = z.getBoundingClientRect(); z.style.setProperty("--ox", ((e.clientX - r.left) / r.width * 100).toFixed(1) + "%"); z.style.setProperty("--oy", ((e.clientY - r.top) / r.height * 100).toFixed(1) + "%"); };
+      z.addEventListener("pointermove", (e) => { if (z.classList.contains("zoomed")) move(e); });
+    }
+    renderDetailInfo(p);
+    $("pd-info").scrollTop = 0;
+    if (!pd.open) pd.showModal();
+  }
+  pd.addEventListener("click", (e) => { if (e.target === pd) pd.close(); else onAction(e); });
+  $("pd-close").addEventListener("click", () => pd.close());
+  pd.addEventListener("close", () => { pdId = null; });
+
+  /* ---------- Quiénes somos, redes y WhatsApp ---------- */
+  const httpLink = (l) => { l = String(l || "").trim(); return /^https?:\/\/\S+$/i.test(l) ? l : ""; };
+  const ICONS = {
+    instagram: '<rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".6" fill="currentColor"/>',
+    facebook: '<path d="M14 21v-8h2.8l.5-3.2H14V7.9c0-.9.4-1.5 1.6-1.5h1.8V3.5c-.4 0-1.4-.2-2.5-.2-2.6 0-4.1 1.5-4.1 4.2v2.3H8V13h2.8v8z"/>',
+    tiktok: '<path d="M14.5 4v10.2a3.6 3.6 0 1 1-3.6-3.6"/><path d="M14.5 4c.3 2.3 1.9 3.9 4.5 4.1"/>',
+    youtube: '<rect x="3" y="6" width="18" height="12" rx="4"/><path d="M10.5 9.6v4.8l4.2-2.4z"/>',
+    whatsapp: '<path d="M3.5 20.5l1.3-4.2A8.5 8.5 0 1 1 8 19.2z"/><path d="M9.2 8.8c.2 2.2 2.4 4.6 5 5.4l1.2-1.2-1.9-1-.8.8c-.8-.4-1.7-1.3-2.1-2.1l.8-.8-1-1.9z"/>',
+  };
+  const NAMES = { instagram: "Instagram", facebook: "Facebook", tiktok: "TikTok", youtube: "YouTube", whatsapp: "WhatsApp" };
+  function renderSocial() {
+    const soc = S.social || {};
+    const list = ["instagram", "facebook", "tiktok", "youtube"].map((k) => [k, httpLink(soc[k])]).filter(([, u]) => u);
+    if (S.whatsapp) list.push(["whatsapp", waLink("")]);
+    $("social").innerHTML = list.map(([k, u]) => `<li><a href="${esc(u)}" target="_blank" rel="noopener" aria-label="${NAMES[k]}"><svg viewBox="0 0 24 24" fill="${k === "facebook" ? "currentColor" : "none"}" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[k]}</svg><span class="sr-only">${NAMES[k]}</span></a></li>`).join("");
+  }
+  function renderAbout() {
+    const a = S.about || {}, text = String(a.text || "").trim();
+    $("nosotros").hidden = !text; $("nav-about").hidden = !text;
+    if (!text) return;
+    $("about-title").textContent = String(a.title || "").trim() || "Quiénes somos";
+    $("about-body").innerHTML = text.split(/\n+/).map((x) => x.trim()).filter(Boolean).map((x) => `<p>${esc(x)}</p>`).join("");
+    const im = $("about-img");
+    im.hidden = !a.image;
+    im.innerHTML = a.image ? `<img src="${esc(a.image)}" alt="" loading="lazy">` : "";
+    $("nosotros").classList.toggle("no-img", !a.image);
+  }
+
+  const skeletons = () => Array.from({ length: 8 }, () => '<div class="card sk" aria-hidden="true"><div class="media"></div><div class="body"><span class="sk-l"></span><span class="sk-l s"></span></div></div>').join("");
 
   /* ---------- portada: anuncio y banners ---------- */
   const safeLink = (l) => {
@@ -497,8 +650,9 @@
     window.Theme.apply(S);
     document.title = S.storeName || document.title;
     $("brand").innerHTML = window.Theme.brandHTML(S);
-    $("wa-header").href = `https://wa.me/${S.whatsapp}`;
-    $("foot-wa").href = `https://wa.me/${S.whatsapp}`;
+    const ask = waLink("Hola, quiero que me asesoren.");
+    $("wa-header").href = ask; $("wa-float").href = ask; $("about-wa").href = ask;
+    renderSocial(); renderAbout();
     $("foot-name").textContent = `© ${new Date().getFullYear()} ${S.storeName || ""}`.trim();
     if (S.logo) {
       let ic = document.querySelector('link[rel="icon"]');
@@ -516,6 +670,7 @@
       $("updated").textContent = "Disponibilidad actualizada el " + d.toLocaleString(S.locale || "es-CO", { dateStyle: "long", timeStyle: "short" });
     }
     reconcile();
+    renderQuick();
     applyHash(true);
     renderAll();
   }
@@ -523,8 +678,10 @@
   const getJson = (url) => fetch(url, { cache: "no-store" }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
 
   loadCart();
-  Promise.all([getJson("site.json").catch(() => ({})), getJson("products.json")])
-    .then(([site, data]) => { Object.assign(S, site); applySite(); init(data); })
-    .catch(() => { applySite(); $("meta").textContent = "No pudimos cargar el catálogo. Intenta recargar la página."; })
-    .finally(() => { document.body.style.visibility = "visible"; });
+  window.addEventListener("scroll", () => document.querySelector(".top").classList.toggle("scrolled", scrollY > 4), { passive: true });
+  const siteP = getJson("site.json").catch(() => ({}));
+  const prodP = getJson("products.json");
+  siteP.then((site) => { Object.assign(S, site); applySite(); $("grid").innerHTML = skeletons(); document.body.style.visibility = "visible"; });
+  Promise.all([siteP, prodP]).then(([, data]) => init(data))
+    .catch(() => { applySite(); $("grid").innerHTML = ""; $("meta").textContent = "No pudimos cargar el catálogo. Intenta recargar la página."; document.body.style.visibility = "visible"; });
 })();

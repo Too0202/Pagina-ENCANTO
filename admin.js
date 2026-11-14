@@ -9,12 +9,13 @@
     hideSoldOut: false, theme: { mode: "auto" }, font: "clasica",
     orderGreeting: "Hola, quiero hacer este pedido:",
     announcement: { text: "", link: "" }, banners: [],
+    about: { title: "", text: "", image: "" }, social: {},
   };
   const state = {
     repo: "", token: "", branch: "main",
     products: [], config: null, catalog: { categories: [], products: [] }, site: { ...DEFAULT_SITE },
     tab: "mine", dlg: null,
-    draft: null, logoFile: null, logoUrl: "", vaultExists: false,
+    draft: null, logoFile: null, logoUrl: "", aboutFile: null, aboutUrl: "", vaultExists: false,
   };
 
   /* ---------- utilidades ---------- */
@@ -252,6 +253,9 @@
       if (q && !norm([p.name, p.brand, p.category, p.subcategory].join(" ")).includes(q)) return false;
       if (mine.st === "nocat") return !p.category || !p.brand;
       if (mine.st === "own") return myStock(p) > 0;
+      if (mine.st === "promo") return Number(p.oldPrice) > Number(p.price);
+      if (mine.st === "kit") return !!p.kit;
+      if (mine.st === "nophoto") return !p.image;
       if (mine.st) return statusOf(p).key === mine.st || (mine.st === "sale" && statusOf(p).key === "own");
       return true;
     });
@@ -262,13 +266,14 @@
     const n = myStock(p);
     const where = [p.category, p.subcategory].filter(Boolean).join(" › ");
     const note = p.supplierId ? (supplierHas(p) ? "" : '<span class="pill warn">El proveedor ya no lo tiene</span>') : '<span class="pill warn">Producto propio</span>';
+    const tags = (Number(p.oldPrice) > Number(p.price) ? '<span class="pill ok">Promoción</span>' : "") + (p.kit ? '<span class="pill warn">Kit</span>' : "") + (p.image ? "" : '<span class="pill warn">Sin foto</span>');
     return `<div class="row mrow" data-row="${esc(p.id)}">
       <label class="pick"><input type="checkbox" data-pick="${esc(p.id)}" ${mine.sel.has(p.id) ? "checked" : ""} aria-label="Elegir ${esc(p.name)}"></label>
       ${thumb(p.image, p.name)}
       <div class="row-main">
         <div class="row-name">${esc(p.name)}</div>
         <div class="row-sub"><span>${money(p.price)}</span>${p.brand ? `<span>${esc(p.brand)}</span>` : ""}<span>${esc(where || "Sin categoría")}</span>
-          <span class="pill ${st.cls}">${esc(st.text)}</span>${note}</div>
+          <span class="pill ${st.cls}">${esc(st.text)}</span>${note}${tags}</div>
       </div>
       <div class="stock" role="group" aria-label="Tu stock de ${esc(p.name)}">
         <span class="stock-l">Tu stock</span>
@@ -304,10 +309,11 @@
 
     const out = list.filter((p) => statusOf(p).key === "out").length;
     const own = list.filter((p) => p.supplierId && !supplierHas(p) && myStock(p) > 0).length;
+    const nophoto = list.filter((p) => !p.image).length;
     const found = filteredMine();
     const shown = found.slice(0, mine.limit);
     $("#mine-summary").textContent = list.length
-      ? `${found.length === list.length ? list.length : found.length + " de " + list.length} producto${list.length === 1 ? "" : "s"} · ${out} agotado${out === 1 ? "" : "s"}` + (own ? ` · ${own} a la venta solo por tu stock` : "")
+      ? `${found.length === list.length ? list.length : found.length + " de " + list.length} producto${list.length === 1 ? "" : "s"} · ${out} agotado${out === 1 ? "" : "s"}` + (own ? ` · ${own} a la venta solo por tu stock` : "") + (nophoto ? ` · ${nophoto} sin foto` : "")
       : "";
     const filtering = list.length > 0 && found.length === 0;
     show($("#mine-empty"), found.length === 0);
@@ -531,10 +537,32 @@
       state.draft.banners.push({ image: "", title: "", subtitle: "", buttonText: "", link: "", dest: { type: "none" } });
       renderBanners(); host.querySelector(`[data-bn="${state.draft.banners.length - 1}"] [data-bf="title"]`)?.focus();
     });
+    $("#l-about-title").addEventListener("input", (e) => { state.draft.about.title = e.target.value; });
+    $("#l-about-text").addEventListener("input", (e) => { state.draft.about.text = e.target.value; });
+    for (const k of SOCIALS) $("#l-" + k).addEventListener("input", (e) => { state.draft.social[k] = e.target.value; show($("#e-" + k), false); });
+    $("#l-about-file").addEventListener("change", (e) => {
+      const file = e.target.files[0]; if (!file) return;
+      if (state.aboutUrl) URL.revokeObjectURL(state.aboutUrl);
+      state.aboutFile = file; state.aboutUrl = URL.createObjectURL(file); syncLookInputs();
+    });
+    $("#l-about-rm").addEventListener("click", () => {
+      if (state.aboutUrl) URL.revokeObjectURL(state.aboutUrl);
+      state.aboutFile = null; state.aboutUrl = ""; state.draft.about.image = ""; $("#l-about-file").value = ""; syncLookInputs();
+    });
     $("#l-ann").addEventListener("input", (e) => { state.draft.announcement.text = e.target.value; renderPreview(); });
     $("#l-ann-link").addEventListener("input", (e) => { state.draft.announcement.link = e.target.value; show($("#e-annlink"), false); });
   }
 
+  const SOCIALS = ["instagram", "facebook", "tiktok", "youtube"];
+  const SOCIAL_BASE = { instagram: "https://instagram.com/", facebook: "https://facebook.com/", tiktok: "https://tiktok.com/@", youtube: "https://youtube.com/@" };
+  // "@mitienda" o "mitienda" -> link completo; un link https se deja igual; otra cosa es un error.
+  function normSocial(key, v) {
+    v = String(v || "").trim();
+    if (!v) return "";
+    if (/^https?:\/\/\S+$/i.test(v)) return v;
+    const u = v.replace(/^@/, "");
+    return /^[\w.\-]{2,40}$/.test(u) ? SOCIAL_BASE[key] + u : null;
+  }
   const okLink = (l) => !l || /^https?:\/\/\S+$/i.test(l) || l.startsWith("#");
 
   /* ---------- Apariencia ---------- */
@@ -569,6 +597,12 @@
     $("#l-wa").value = d.whatsapp || "";
     $("#l-greet").value = d.orderGreeting || "";
     $("#l-ann").value = d.announcement?.text || "";
+    $("#l-about-title").value = d.about?.title || "";
+    $("#l-about-text").value = d.about?.text || "";
+    for (const k of SOCIALS) $("#l-" + k).value = d.social?.[k] || "";
+    const aSrc = state.aboutUrl || d.about?.image || "";
+    $("#l-about-img").hidden = !aSrc; if (aSrc) $("#l-about-img").src = aSrc;
+    show($("#l-about-rm"), !!aSrc);
     $("#l-ann-link").value = d.announcement?.link || "";
     $("#l-hide").checked = !!d.hideSoldOut;
     document.querySelectorAll('input[name="brandMode"]').forEach((r) => { r.checked = r.value === (d.brandMode || "name"); });
@@ -614,6 +648,8 @@
     if (!state.draft) state.draft = structuredClone(state.site);
     state.draft.banners = Array.isArray(state.draft.banners) ? state.draft.banners : [];
     state.draft.announcement = state.draft.announcement || { text: "", link: "" };
+    state.draft.about = state.draft.about || { title: "", text: "", image: "" };
+    state.draft.social = state.draft.social || {};
     syncLookInputs();
     renderBanners();
     renderPreview();
@@ -672,6 +708,13 @@
       if (!/^\d{8,15}$/.test(wa)) { show($("#e-wa"), true); if (!bad) $("#l-wa").focus(); bad = true; }
       const ann = d.announcement || { text: "", link: "" };
       if (!okLink(String(ann.link || "").trim()) || String(ann.link || "").startsWith("#")) { show($("#e-annlink"), true); if (!bad) $("#l-ann-link").focus(); bad = true; }
+      const social = {};
+      for (const k of SOCIALS) {
+        show($("#e-" + k), false);
+        const v = normSocial(k, d.social?.[k]);
+        if (v === null) { showErr("#e-" + k, "Escribe tu usuario (sin espacios) o el link completo que empieza por https://"); if (!bad) $("#l-" + k).focus(); bad = true; }
+        else if (v) social[k] = v;
+      }
       show($("#banners-error"), false);
       for (const [i, b] of (d.banners || []).entries()) {
         const dest = destOf(b);
@@ -698,11 +741,16 @@
             link: linkFromDest(dest), dest: dest.type === "none" ? { type: "none" } : { ...dest, ...(dest.type === "url" ? { url: String(dest.url).trim() } : {}) },
           });
         }
+        let aboutImage = d.about?.image || "";
+        if (state.aboutFile) aboutImage = await uploadImage(state.aboutFile, { max: 1400, prefix: "about-", message: "Subir foto de Quiénes somos" });
+        const about = { title: String(d.about?.title || "").trim(), text: String(d.about?.text || "").trim(), image: aboutImage };
         const announcement = { text: String(ann.text || "").trim(), link: String(ann.link || "").trim() };
-        const next = { ...d, banners, announcement, storeName: d.storeName.trim(), whatsapp: wa, logo, orderGreeting: String(d.orderGreeting || "").trim() || DEFAULT_SITE.orderGreeting };
+        const next = { ...d, banners, announcement, about, social, storeName: d.storeName.trim(), whatsapp: wa, logo, orderGreeting: String(d.orderGreeting || "").trim() || DEFAULT_SITE.orderGreeting };
         const saved = await updateJson("site.json", () => next, "Cambiar apariencia de la tienda");
         state.site = { ...DEFAULT_SITE, ...saved };
         for (const b of d.banners) if (b._url) URL.revokeObjectURL(b._url);
+        if (state.aboutUrl) URL.revokeObjectURL(state.aboutUrl);
+        state.aboutFile = null; state.aboutUrl = ""; $("#l-about-file").value = "";
         state.draft = structuredClone(state.site);
         state.draft.banners = state.draft.banners || [];
         state.draft.announcement = state.draft.announcement || { text: "", link: "" };
@@ -751,8 +799,9 @@
   }
 
   /* ---------- Diálogo de producto ---------- */
+  const OPT = ["subcategory", "brand", "hidden", "oldPrice", "badge", "description", "kit", "includes"];
   const dlg = $("#dlg");
-  const f = { name: $("#f-name"), cat: $("#f-cat"), sub: $("#f-sub"), brand: $("#f-brand"), stock: $("#f-stock"), price: $("#f-price"), image: $("#f-image"), file: $("#f-file"), hidden: $("#f-hidden"), preview: $("#f-preview") };
+  const f = { name: $("#f-name"), cat: $("#f-cat"), sub: $("#f-sub"), brand: $("#f-brand"), stock: $("#f-stock"), old: $("#f-old"), badge: $("#f-badge"), desc: $("#f-desc"), kit: $("#f-kit"), inc: $("#f-inc"), price: $("#f-price"), image: $("#f-image"), file: $("#f-file"), hidden: $("#f-hidden"), preview: $("#f-preview") };
 
   function setPreview() {
     const src = f.image.value.trim();
@@ -776,7 +825,7 @@
 
   function openDialog(mode, data) {
     state.dlg = { mode, id: data.id, supplier: data.supplier, linked: mode !== "own" && !!(data.supplier || data.supplierName || data.linked), supplierOk: data.supplierOk };
-    $("#dlg-title").textContent = mode === "add" ? "Agregar a tu tienda" : mode === "own" ? "Crear producto propio" : "Editar producto";
+    $("#dlg-title").textContent = mode === "add" ? "Agregar a tu tienda" : mode === "own" ? (data.kit ? "Crear kit" : "Crear producto propio") : "Editar producto";
     $("#dlg-supplier").textContent = mode === "own" ? "Un producto que no viene del proveedor. Se vende solo mientras tengas stock." : data.supplierName ? `Producto del proveedor: ${data.supplierName}` : "";
     f.name.value = data.name || "";
     f.cat.value = data.category || "";
@@ -784,6 +833,12 @@
     f.brand.value = data.brand || guessBrand(data.name || "");
     f.stock.value = data.stock ?? 0;
     f.price.value = data.price ?? "";
+    f.old.value = data.oldPrice ?? "";
+    f.badge.value = data.badge || "";
+    f.desc.value = data.description || "";
+    f.kit.checked = !!data.kit;
+    f.inc.value = (data.includes || []).join("\n");
+    show($("#f-inc-wrap"), f.kit.checked);
     f.image.value = data.image || "";
     f.file.value = "";
     f.hidden.checked = !!data.hidden;
@@ -791,7 +846,7 @@
     $("#cat-options").innerHTML = uniq([...t.cats.keys(), ...state.config.categories.map((c) => categoryLabel(c.id))]).map((c) => `<option value="${esc(c)}">`).join("");
     $("#brand-options").innerHTML = t.brands.map((c) => `<option value="${esc(c)}">`).join("");
     fillSubs(f.cat, "#sub-options");
-    for (const id of ["e-name", "e-price", "e-stock", "dlg-error"]) show($("#" + id), false);
+    for (const id of ["e-name", "e-price", "e-stock", "e-old", "dlg-error"]) show($("#" + id), false);
     for (const k of ["name", "price", "stock"]) f[k].removeAttribute("aria-invalid");
     show($("#dlg-remove"), mode === "edit");
     $("#dlg-save").disabled = false;
@@ -802,6 +857,8 @@
   }
 
   f.cat.addEventListener("input", () => fillSubs(f.cat, "#sub-options"));
+  f.kit.addEventListener("change", () => show($("#f-inc-wrap"), f.kit.checked));
+  f.old.addEventListener("input", () => show($("#e-old"), false));
   f.stock.addEventListener("input", () => { show($("#e-stock"), false); f.stock.removeAttribute("aria-invalid"); stockHelp(); });
   $("#b-cat").addEventListener("input", () => fillSubs($("#b-cat"), "#sub-options"));
 
@@ -821,11 +878,14 @@
     let bad = false;
     if (!name) { show($("#e-name"), true); f.name.setAttribute("aria-invalid", "true"); bad = true; }
     if (!(price > 0)) { show($("#e-price"), true); f.price.setAttribute("aria-invalid", "true"); bad = true; }
+    const oldRaw = f.old.value.trim();
+    const oldPrice = oldRaw === "" ? 0 : Number(oldRaw);
+    if (oldRaw !== "" && !(oldPrice > price)) { show($("#e-old"), true); f.old.setAttribute("aria-invalid", "true"); bad = true; }
     const stockRaw = String(f.stock.value).trim();
     const stock = stockRaw === "" ? 0 : Number(stockRaw);
     const stockBad = !Number.isInteger(stock) || stock < 0 || stock > 99999;
     if (stockBad) { show($("#e-stock"), true); f.stock.setAttribute("aria-invalid", "true"); bad = true; }
-    if (bad) { (!name ? f.name : !(price > 0) ? f.price : f.stock).focus(); return; }
+    if (bad) { (!name ? f.name : !(price > 0) ? f.price : (oldRaw !== "" && !(oldPrice > price)) ? f.old : f.stock).focus(); return; }
 
     const btn = $("#dlg-save");
     btn.disabled = true; btn.textContent = "Guardando…";
@@ -836,7 +896,10 @@
       const category = canon(f.cat.value, [...t.cats.keys()]);
       const subcategory = canon(f.sub.value, subsFor(category));
       const brand = canon(f.brand.value, t.brands);
-      const base = { name, category, subcategory, brand, price, image, stock, hidden: f.hidden.checked || undefined };
+      const isKit = f.kit.checked;
+      const incl = isKit ? f.inc.value.split(/\n/).map((x) => x.trim()).filter(Boolean) : [];
+      const base = { name, category, subcategory, brand, price, image, stock, hidden: f.hidden.checked || undefined,
+        oldPrice: oldPrice || undefined, badge: f.badge.value, description: f.desc.value.trim(), kit: isKit || undefined, includes: incl.length ? incl : undefined };
 
       if (state.dlg.mode === "add") {
         const s = state.dlg.supplier;
@@ -845,7 +908,7 @@
           supplierAvailable: availability(s).ok, lastChecked: null,
         };
         rec.available = isAvailable(rec);
-        for (const k of ["subcategory", "brand", "hidden"]) if (!rec[k]) delete rec[k];
+        for (const k of OPT) if (!rec[k]) delete rec[k];
         const next = await updateJson("products.json", (d) => {
           d.products = d.products || [];
           if (!d.products.some((p) => p.id === rec.id)) d.products.push(rec);
@@ -855,7 +918,7 @@
       } else if (state.dlg.mode === "own") {
         const rec = { id: state.dlg.id, ...base };
         rec.available = isAvailable(rec);
-        for (const k of ["subcategory", "brand", "hidden"]) if (!rec[k]) delete rec[k];
+        for (const k of OPT) if (!rec[k]) delete rec[k];
         const next = await updateJson("products.json", (d) => { d.products = d.products || []; d.products.push(rec); return d; }, `Crear ${name}`);
         state.products = next.products;
       } else {
@@ -863,7 +926,7 @@
           d.products = d.products.map((p) => {
             if (p.id !== state.dlg.id) return p;
             const merged = { ...p, ...base };
-            for (const k of ["subcategory", "brand", "hidden"]) if (!merged[k]) delete merged[k];
+            for (const k of OPT) if (!merged[k]) delete merged[k];
             merged.available = isAvailable(merged);
             return merged;
           });
@@ -903,7 +966,7 @@
     if (t.dataset.goto) setTab(t.dataset.goto);
     if (t.dataset.edit) {
       const p = state.products.find((x) => x.id === t.dataset.edit);
-      if (p) openDialog("edit", { id: p.id, supplierName: p.supplierName, linked: !!p.supplierId, supplierOk: supplierHas(p), name: p.name, category: p.category, subcategory: p.subcategory, brand: p.brand, stock: myStock(p), price: p.price, image: p.image, hidden: p.hidden });
+      if (p) openDialog("edit", { id: p.id, supplierName: p.supplierName, linked: !!p.supplierId, supplierOk: supplierHas(p), name: p.name, category: p.category, subcategory: p.subcategory, brand: p.brand, stock: myStock(p), price: p.price, oldPrice: p.oldPrice, badge: p.badge, description: p.description, kit: p.kit, includes: p.includes, image: p.image, hidden: p.hidden });
     }
     if (t.dataset.add) {
       const s = state.catalog.products.find((x) => x.id === t.dataset.add);
@@ -921,6 +984,7 @@
   $("#m-brand").addEventListener("change", (e) => { mine.brand = e.target.value; mine.limit = 50; renderMine(); });
   $("#m-state").addEventListener("change", (e) => { mine.st = e.target.value; mine.limit = 50; renderMine(); });
   $("#mine-more-btn").addEventListener("click", () => { mine.limit += 50; renderMine(); });
+  $("#m-kit").addEventListener("click", () => openDialog("own", { id: "own-" + Date.now(), name: "", category: "", stock: 1, price: "", image: "", kit: true }));
   $("#m-own").addEventListener("click", () => openDialog("own", { id: "own-" + Date.now(), name: "", category: "", stock: 1, price: "", image: "" }));
   $("#mine-list").addEventListener("change", (e) => {
     const pick = e.target.dataset.pick, sin = e.target.dataset.stockin;

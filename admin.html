@@ -109,6 +109,9 @@
               <option value="hidden">Ocultos</option>
               <option value="own">Con stock propio</option>
               <option value="nocat">Sin categoría o sin marca</option>
+              <option value="promo">En promoción</option>
+              <option value="kit">Kits</option>
+              <option value="nophoto">Sin foto</option>
             </select>
           </label>
         </div>
@@ -116,6 +119,7 @@
           <label class="check"><input type="checkbox" id="m-all"><span id="m-all-label">Seleccionar todos</span></label>
           <span class="muted" id="mine-summary"></span>
           <span class="spacer"></span>
+          <button class="btn btn-ghost" id="m-kit" type="button">Crear kit</button>
           <button class="btn btn-ghost" id="m-own" type="button">Crear producto propio</button>
         </div>
         <div class="bulkbar" id="bulkbar" hidden>
@@ -229,6 +233,34 @@
               <div class="banners" id="banners"></div>
               <p class="error" id="banners-error" role="alert" hidden></p>
               <button class="btn btn-ghost" id="banner-add" type="button">Agregar banner</button>
+            </fieldset>
+
+            <fieldset class="panel">
+              <legend>Quiénes somos</legend>
+              <p class="muted">Aparece en una sección de tu tienda. Déjala vacía si no quieres mostrarla.</p>
+              <label class="field">
+                <span>Título</span>
+                <input id="l-about-title" autocomplete="off" placeholder="Quiénes somos">
+              </label>
+              <label class="field">
+                <span>Tu historia</span>
+                <textarea id="l-about-text" rows="5"></textarea>
+                <small>Un renglón nuevo es un párrafo nuevo.</small>
+              </label>
+              <div class="logo-row">
+                <img id="l-about-img" alt="" hidden>
+                <label class="field"><span>Foto (opcional)</span><input id="l-about-file" type="file" accept="image/*"></label>
+                <button class="btn btn-ghost sm" id="l-about-rm" type="button" hidden>Quitar foto</button>
+              </div>
+            </fieldset>
+
+            <fieldset class="panel">
+              <legend>Redes sociales</legend>
+              <p class="muted">Escribe tu usuario (por ejemplo @mitienda) o pega el link completo. Los vacíos no se muestran. El ícono de WhatsApp sale solo.</p>
+              <label class="field"><span>Instagram</span><input id="l-instagram" autocomplete="off" spellcheck="false"><small class="error" id="e-instagram" hidden></small></label>
+              <label class="field"><span>Facebook</span><input id="l-facebook" autocomplete="off" spellcheck="false"><small class="error" id="e-facebook" hidden></small></label>
+              <label class="field"><span>TikTok</span><input id="l-tiktok" autocomplete="off" spellcheck="false"><small class="error" id="e-tiktok" hidden></small></label>
+              <label class="field"><span>YouTube</span><input id="l-youtube" autocomplete="off" spellcheck="false"><small class="error" id="e-youtube" hidden></small></label>
             </fieldset>
 
             <fieldset class="panel">
@@ -358,6 +390,36 @@
         </label>
       </div>
       <p class="stock-help" id="f-stock-help"></p>
+      <div class="two">
+        <label class="field">
+          <span>Precio antes (opcional)</span>
+          <input id="f-old" type="number" inputmode="numeric" min="1" step="1">
+          <small>Si lo pones más alto que tu precio, aparece tachado con el % de descuento: es una promoción.</small>
+          <small class="error" id="e-old" hidden>El precio de antes debe ser mayor que tu precio de venta.</small>
+        </label>
+        <label class="field">
+          <span>Etiqueta (opcional)</span>
+          <select id="f-badge">
+            <option value="">Ninguna</option>
+            <option value="nuevo">Nuevo</option>
+            <option value="top">Más vendido</option>
+          </select>
+        </label>
+      </div>
+      <label class="field">
+        <span>Descripción (opcional)</span>
+        <textarea id="f-desc" rows="3"></textarea>
+        <small>Se ve al abrir el producto. Un renglón nuevo es un párrafo nuevo.</small>
+      </label>
+      <label class="check">
+        <input type="checkbox" id="f-kit">
+        <span>Es un kit (varios productos juntos)</span>
+      </label>
+      <label class="field" id="f-inc-wrap" hidden>
+        <span>Qué incluye el kit (uno por renglón)</span>
+        <textarea id="f-inc" rows="3"></textarea>
+        <small>Lo que pones aquí se muestra como lista. Recuerda poner el stock del kit: es el número de kits que tienes armados.</small>
+      </label>
       <div class="field">
         <span>Foto</span>
         <div class="photo">

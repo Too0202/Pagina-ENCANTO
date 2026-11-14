@@ -16,7 +16,10 @@
     <div class="wrap top-inner">
       <a class="brand" href="./" id="brand"></a>
       <div class="top-right">
-        <a class="hbtn" id="wa-header" target="_blank" rel="noopener">Escríbenos</a>
+        <a class="hbtn" id="nav-about" href="#nosotros" hidden>Nosotros</a>
+        <a class="hbtn wa-pill" id="wa-header" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 20.5l1.3-4.2A8.5 8.5 0 1 1 8 19.2z"/><path d="M9.2 8.8c.2 2.2 2.4 4.6 5 5.4l1.2-1.2-1.9-1-.8.8c-.8-.4-1.7-1.3-2.1-2.1l.8-.8-1-1.9z"/></svg>
+          <span>Asesórame</span></a>
         <button class="hbtn" id="cart-btn" type="button" aria-haspopup="dialog">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
           <span>Carrito</span>
@@ -27,9 +30,12 @@
   </header>
 
   <section class="stage" id="stage" aria-label="Portada"><div class="wrap" id="stage-inner"></div></section>
+  <nav class="wrap quick" id="quick" aria-label="Categorías" hidden></nav>
 
   <main class="wrap shop" id="catalogo" tabindex="-1">
     <p class="notice" id="notice" role="status" aria-live="polite" hidden></p>
+
+    <div id="highlights"></div>
 
     <div class="shop-head">
       <h2 class="shop-title">Productos</h2>
@@ -70,13 +76,39 @@
     </div>
   </main>
 
+  <section class="about" id="nosotros" aria-labelledby="about-title" hidden tabindex="-1">
+    <div class="wrap about-inner">
+      <div class="about-img" id="about-img" hidden></div>
+      <div class="about-text">
+        <p class="eyebrow">Nosotros</p>
+        <h2 id="about-title"></h2>
+        <div id="about-body"></div>
+        <a class="btn btn-ghost about-btn" id="about-wa" target="_blank" rel="noopener">Asesórame</a>
+      </div>
+    </div>
+  </section>
+
   <footer class="foot">
     <div class="wrap foot-inner">
-      <span id="foot-name"></span>
-      <a id="foot-wa" target="_blank" rel="noopener">Escríbenos por WhatsApp</a>
-      <span id="updated"></span>
+      <div class="foot-brand"><strong id="foot-name"></strong><span id="updated"></span></div>
+      <ul class="social" id="social" aria-label="Redes sociales"></ul>
     </div>
   </footer>
+
+  <a class="wa-float" id="wa-float" target="_blank" rel="noopener" aria-label="Asesórame por WhatsApp">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 20.5l1.3-4.2A8.5 8.5 0 1 1 8 19.2z"/><path d="M9.2 8.8c.2 2.2 2.4 4.6 5 5.4l1.2-1.2-1.9-1-.8.8c-.8-.4-1.7-1.3-2.1-2.1l.8-.8-1-1.9z"/></svg>
+    <span>Asesórame</span>
+  </a>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- Detalle del producto (con foto ampliable) -->
+  <dialog id="pd" class="pd" aria-labelledby="pd-name">
+    <button class="pd-close" id="pd-close" type="button" aria-label="Cerrar">×</button>
+    <div class="pd-grid">
+      <div class="pd-media" id="pd-media"></div>
+      <div class="pd-info" id="pd-info"></div>
+    </div>
+  </dialog>
 
   <!-- Barra del carrito (celular) -->
   <button class="cart-bar" id="cart-bar" type="button" hidden>
