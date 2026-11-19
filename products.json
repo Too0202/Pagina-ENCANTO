@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-11T21:00:00.000Z",
+  "updatedAt": "2026-11-19T00:35:28.785Z",
   "products": [
     {
       "id": "p7212",
@@ -9,11 +9,11 @@
       "category": "Cejas",
       "price": 17500,
       "image": "",
-      "available": true,
-      "lastChecked": "2026-11-14T06:48:39.672Z",
+      "available": false,
+      "lastChecked": "2026-11-19T00:35:28.785Z",
       "stock": 0,
-      "supplierAvailable": true,
-      "missCount": 1
+      "supplierAvailable": false,
+      "missCount": 2
     },
     {
       "id": "p439",
@@ -24,7 +24,7 @@
       "price": 20000,
       "image": "",
       "available": true,
-      "lastChecked": "2026-11-18T18:16:40.904Z",
+      "lastChecked": "2026-11-19T00:35:28.785Z",
       "supplierAvailable": true
     },
     {
@@ -36,7 +36,7 @@
       "price": 4000,
       "image": "",
       "available": true,
-      "lastChecked": "2026-11-18T18:16:40.904Z",
+      "lastChecked": "2026-11-19T00:35:28.785Z",
       "stock": 0,
       "supplierAvailable": true
     },
@@ -49,7 +49,7 @@
       "price": 80000,
       "image": "https://sysvariedades.com.co/sistema/public/images/uploads/products/1783443514_acf212210afb5e5b0d8c.jpg?v=1794500212289",
       "available": true,
-      "lastChecked": "2026-11-18T18:16:40.904Z",
+      "lastChecked": "2026-11-19T00:35:28.785Z",
       "supplierAvailable": true
     },
     {
@@ -61,7 +61,7 @@
       "price": 45000,
       "image": "https://sysvariedades.com.co/sistema/public/images/uploads/products/8537.jpg?v=1794526766118",
       "available": true,
-      "lastChecked": "2026-11-18T18:16:40.904Z",
+      "lastChecked": "2026-11-19T00:35:28.785Z",
       "supplierAvailable": true
     }
   ]
