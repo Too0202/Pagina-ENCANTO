@@ -21,10 +21,6 @@
     {
       "id": 3,
       "name": "CAPILAR"
-    },
-    {
-      "id": 9,
-      "name": "Complementos de belleza"
     }
   ],
   "soldOutWhenQuantityAtOrBelow": null,
