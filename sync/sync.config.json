@@ -25,6 +25,9 @@
     {
       "id": 5,
       "name": "Cuidado Facial"
+    },
+    {
+      "id": 7
     }
   ],
   "soldOutWhenQuantityAtOrBelow": null,
