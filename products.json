@@ -66,6 +66,21 @@
       "available": true,
       "lastChecked": "2026-11-19T08:08:36.153Z",
       "supplierAvailable": true
+    },
+    {
+      "id": "p9324",
+      "supplierId": "9324",
+      "supplierName": "Acondicionador Cebolla Milagros x 450ml",
+      "name": "Acondicionador Cebolla Milagros x 450ml",
+      "category": "Cuidado Capilar",
+      "subcategory": "Acondicionador",
+      "brand": "Milagros",
+      "price": 17000,
+      "image": "",
+      "stock": 5,
+      "supplierAvailable": true,
+      "lastChecked": null,
+      "available": true
     }
   ]
 }
