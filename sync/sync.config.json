@@ -25,6 +25,10 @@
     {
       "id": 7,
       "name": "LABIOS"
+    },
+    {
+      "id": 7,
+      "name": "LABIOS"
     }
   ],
   "soldOutWhenQuantityAtOrBelow": null,
