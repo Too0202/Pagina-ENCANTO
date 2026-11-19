@@ -25,10 +25,6 @@
     {
       "id": 5,
       "name": "Cuidado Facial"
-    },
-    {
-      "id": 62,
-      "name": "lab"
     }
   ],
   "soldOutWhenQuantityAtOrBelow": null,
