@@ -31,10 +31,6 @@
     },
     {
       "id": 7
-    },
-    {
-      "id": 62,
-      "name": "lab"
     }
   ],
   "soldOutWhenQuantityAtOrBelow": null,
