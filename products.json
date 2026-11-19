@@ -50,7 +50,10 @@
       "image": "https://sysvariedades.com.co/sistema/public/images/uploads/products/1783443514_acf212210afb5e5b0d8c.jpg?v=1794500212289",
       "available": true,
       "lastChecked": "2026-11-19T08:08:36.153Z",
-      "supplierAvailable": true
+      "supplierAvailable": true,
+      "subcategory": "Acondicionador",
+      "brand": "Anyeluz",
+      "stock": 0
     },
     {
       "id": "p8",
