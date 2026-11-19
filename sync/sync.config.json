@@ -21,10 +21,6 @@
     {
       "id": 3,
       "name": "CAPILAR"
-    },
-    {
-      "id": 7,
-      "name": "LABIOS"
     }
   ],
   "soldOutWhenQuantityAtOrBelow": null,
