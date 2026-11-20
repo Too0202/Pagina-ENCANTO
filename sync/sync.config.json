@@ -81,6 +81,10 @@
     {
       "id": 49,
       "name": "ESPONJAS Y BORLAS DE MAQUILLAJE"
+    },
+    {
+      "id": 62,
+      "name": "CONTORNOS Y BRONZER"
     }
   ],
   "soldOutWhenQuantityAtOrBelow": null,
