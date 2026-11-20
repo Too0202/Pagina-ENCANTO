@@ -49,6 +49,10 @@
     {
       "id": 26,
       "name": "POLVOS COMPACTOS"
+    },
+    {
+      "id": 28,
+      "name": "DELINEADORES"
     }
   ],
   "soldOutWhenQuantityAtOrBelow": null,
