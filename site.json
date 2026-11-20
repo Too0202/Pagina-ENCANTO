@@ -21,7 +21,18 @@
     "text": "10% de descuento en tu primera compra.",
     "link": ""
   },
-  "banners": [],
+  "banners": [
+    {
+      "image": "img/banner-0-1795205853611.jpg",
+      "title": "Tus marcas preferidas",
+      "subtitle": "",
+      "buttonText": "",
+      "link": "",
+      "dest": {
+        "type": "none"
+      }
+    }
+  ],
   "about": {
     "title": "",
     "text": "",
