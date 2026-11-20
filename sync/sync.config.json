@@ -37,6 +37,10 @@
     {
       "id": 23,
       "name": "SOMBRAS"
+    },
+    {
+      "id": 24,
+      "name": "RUBORES"
     }
   ],
   "soldOutWhenQuantityAtOrBelow": null,
