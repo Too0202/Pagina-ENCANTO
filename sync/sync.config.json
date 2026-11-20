@@ -89,6 +89,10 @@
     {
       "id": 81,
       "name": "COSMETIQUERAS"
+    },
+    {
+      "id": 22,
+      "name": "PESTAÑAS"
     }
   ],
   "soldOutWhenQuantityAtOrBelow": null,
