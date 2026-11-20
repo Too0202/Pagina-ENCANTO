@@ -41,6 +41,10 @@
     {
       "id": 24,
       "name": "RUBORES"
+    },
+    {
+      "id": 27,
+      "name": "BASE LIQUIDA"
     }
   ],
   "soldOutWhenQuantityAtOrBelow": null,
