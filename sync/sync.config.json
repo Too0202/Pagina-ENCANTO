@@ -85,6 +85,10 @@
     {
       "id": 62,
       "name": "CONTORNOS Y BRONZER"
+    },
+    {
+      "id": 81,
+      "name": "COSMETIQUERAS"
     }
   ],
   "soldOutWhenQuantityAtOrBelow": null,
