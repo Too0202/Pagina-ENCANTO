@@ -33,6 +33,10 @@
     {
       "id": 19,
       "name": "CORRECTORES"
+    },
+    {
+      "id": 23,
+      "name": "SOMBRAS"
     }
   ],
   "soldOutWhenQuantityAtOrBelow": null,
