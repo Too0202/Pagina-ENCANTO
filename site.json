@@ -23,8 +23,78 @@
   },
   "banners": [
     {
-      "image": "img/banner-0-1795205853611.jpg",
+      "image": "img/banner-0-1795207747497.jpg",
       "title": "Tus marcas preferidas",
+      "subtitle": "",
+      "buttonText": "",
+      "link": "",
+      "dest": {
+        "type": "none"
+      }
+    },
+    {
+      "image": "img/banner-1-1795207749818.jpg",
+      "title": "",
+      "subtitle": "",
+      "buttonText": "",
+      "link": "",
+      "dest": {
+        "type": "none"
+      }
+    },
+    {
+      "image": "img/banner-2-1795207751383.jpg",
+      "title": "",
+      "subtitle": "",
+      "buttonText": "",
+      "link": "",
+      "dest": {
+        "type": "none"
+      }
+    },
+    {
+      "image": "img/banner-3-1795207752816.jpg",
+      "title": "",
+      "subtitle": "",
+      "buttonText": "",
+      "link": "",
+      "dest": {
+        "type": "none"
+      }
+    },
+    {
+      "image": "img/banner-4-1795207754789.jpg",
+      "title": "",
+      "subtitle": "",
+      "buttonText": "",
+      "link": "",
+      "dest": {
+        "type": "none"
+      }
+    },
+    {
+      "image": "img/banner-5-1795207756741.jpg",
+      "title": "",
+      "subtitle": "",
+      "buttonText": "",
+      "link": "",
+      "dest": {
+        "type": "none"
+      }
+    },
+    {
+      "image": "img/banner-6-1795207758694.jpg",
+      "title": "",
+      "subtitle": "",
+      "buttonText": "",
+      "link": "",
+      "dest": {
+        "type": "none"
+      }
+    },
+    {
+      "image": "img/banner-7-1795207760675.jpg",
+      "title": "",
       "subtitle": "",
       "buttonText": "",
       "link": "",
