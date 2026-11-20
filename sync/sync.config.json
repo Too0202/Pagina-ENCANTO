@@ -45,6 +45,10 @@
     {
       "id": 27,
       "name": "BASE LIQUIDA"
+    },
+    {
+      "id": 26,
+      "name": "POLVOS COMPACTOS"
     }
   ],
   "soldOutWhenQuantityAtOrBelow": null,
