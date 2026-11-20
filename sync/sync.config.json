@@ -29,6 +29,10 @@
     {
       "id": 9,
       "name": "COMPLEMENTOS DE BELLEZA"
+    },
+    {
+      "id": 19,
+      "name": "CORRECTORES"
     }
   ],
   "soldOutWhenQuantityAtOrBelow": null,
