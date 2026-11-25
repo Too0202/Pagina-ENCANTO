@@ -82,6 +82,22 @@
       "supplierAvailable": true,
       "lastChecked": "2026-11-25T14:42:47.147Z",
       "available": true
+    },
+    {
+      "id": "p10219",
+      "supplierId": "10219",
+      "supplierName": "Aceite Limpiador Facial Oil To Milk Girly",
+      "name": "Aceite Limpiador Facial Oil To Milk Girly",
+      "category": "SKINCARE",
+      "subcategory": "Rostro",
+      "brand": "Girly",
+      "price": 45000,
+      "image": "img/1795646850477.jpg",
+      "stock": 0,
+      "description": "Aceite limpiador facial con aceite de macadamia, aceite de jojoba y vitamina E. Al contacto con el agua se transforma en una emulsión lechosa que retira el maquillaje, las impurezas y el protector solar sin dejar sensación grasosa.",
+      "supplierAvailable": true,
+      "lastChecked": null,
+      "available": true
     }
   ]
 }
