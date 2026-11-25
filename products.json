@@ -10,10 +10,10 @@
       "price": 17500,
       "image": "",
       "available": false,
-      "lastChecked": "2026-11-25T04:23:01.346Z",
+      "lastChecked": "2026-11-25T14:42:47.147Z",
       "stock": 0,
       "supplierAvailable": false,
-      "missCount": 38
+      "missCount": 39
     },
     {
       "id": "p439",
@@ -24,7 +24,7 @@
       "price": 20000,
       "image": "",
       "available": true,
-      "lastChecked": "2026-11-25T04:23:01.346Z",
+      "lastChecked": "2026-11-25T14:42:47.147Z",
       "supplierAvailable": true
     },
     {
@@ -36,10 +36,10 @@
       "price": 4000,
       "image": "",
       "available": false,
-      "lastChecked": "2026-11-25T04:23:01.346Z",
+      "lastChecked": "2026-11-25T14:42:47.147Z",
       "stock": 0,
       "supplierAvailable": false,
-      "missCount": 2
+      "missCount": 3
     },
     {
       "id": "p9000",
@@ -50,7 +50,7 @@
       "price": 80000,
       "image": "https://sysvariedades.com.co/sistema/public/images/uploads/products/1783443514_acf212210afb5e5b0d8c.jpg?v=1794500212289",
       "available": true,
-      "lastChecked": "2026-11-25T04:23:01.346Z",
+      "lastChecked": "2026-11-25T14:42:47.147Z",
       "supplierAvailable": true,
       "subcategory": "Acondicionador",
       "brand": "Anyeluz",
@@ -65,7 +65,7 @@
       "price": 45000,
       "image": "https://sysvariedades.com.co/sistema/public/images/uploads/products/8537.jpg?v=1794526766118",
       "available": true,
-      "lastChecked": "2026-11-25T04:23:01.346Z",
+      "lastChecked": "2026-11-25T14:42:47.147Z",
       "supplierAvailable": true
     },
     {
@@ -80,7 +80,7 @@
       "image": "",
       "stock": 5,
       "supplierAvailable": true,
-      "lastChecked": "2026-11-25T04:23:01.346Z",
+      "lastChecked": "2026-11-25T14:42:47.147Z",
       "available": true
     }
   ]
