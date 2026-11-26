@@ -217,6 +217,22 @@
       "supplierAvailable": true,
       "lastChecked": null,
       "available": true
+    },
+    {
+      "id": "p9657",
+      "supplierId": "9657",
+      "supplierName": "Mantequilla Chocolate Cake Bioaqua BQY11271",
+      "name": "Mantequilla Chocolate Cake Bioaqua",
+      "category": "CORPORALES",
+      "subcategory": "Mantequillas",
+      "brand": "Bioaqua",
+      "price": 25000,
+      "image": "img/1795727104285.jpg",
+      "stock": 0,
+      "description": "Es una crema hidratante de textura densa y cremosa pensada para nutrir a profundidad la piel seca y darle un aroma dulce a chocolate",
+      "supplierAvailable": true,
+      "lastChecked": null,
+      "available": true
     }
   ]
 }
