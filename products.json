@@ -146,6 +146,21 @@
       "supplierAvailable": true,
       "lastChecked": null,
       "available": true
+    },
+    {
+      "id": "p13",
+      "supplierId": "13",
+      "supplierName": "Aceite Facial Oro 24K X 30Ml Kaba",
+      "name": "Aceite Facial Oro 24K X 30Ml Kaba",
+      "category": "SKINCARE",
+      "brand": "Kaba",
+      "price": 63000,
+      "image": "img/1795721215744.jpg",
+      "stock": 0,
+      "description": "Es un aceite cosmético hidratante y de textura ligera, formulado para aportar luminosidad inmediata y ayudar a mejorar la apariencia de la piel sin dejar sensación grasosa",
+      "supplierAvailable": true,
+      "lastChecked": null,
+      "available": true
     }
   ]
 }
