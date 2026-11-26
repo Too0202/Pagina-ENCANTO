@@ -249,6 +249,22 @@
       "supplierAvailable": true,
       "lastChecked": null,
       "available": true
+    },
+    {
+      "id": "p5133",
+      "supplierId": "5133",
+      "supplierName": "Shampoo En Seco Party Nights Girlz Only",
+      "name": "Shampoo En Seco Party Nights Girlz Only",
+      "category": "CAPILAR",
+      "subcategory": "Shampoo",
+      "brand": "Girlz Only",
+      "price": 37000,
+      "image": "img/1795728076686.jpg",
+      "stock": 0,
+      "description": "Shampoo en seco Party Nights con fragancia floral: absorbe la grasa y deja el cabello limpio, fresco y con cuerpo entre lavados",
+      "supplierAvailable": true,
+      "lastChecked": null,
+      "available": true
     }
   ]
 }
