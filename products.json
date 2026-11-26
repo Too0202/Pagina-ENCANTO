@@ -201,6 +201,22 @@
       "supplierAvailable": true,
       "lastChecked": null,
       "available": true
+    },
+    {
+      "id": "p7228",
+      "supplierId": "7228",
+      "supplierName": "Colageno Para Ojos Bioaqua Acido Hialuronico 03569",
+      "name": "Colageno Para Ojos Bioaqua Acido Hialuronico 03569",
+      "category": "SKINCARE",
+      "subcategory": "Contono de Ojos",
+      "brand": "Bioaqua",
+      "price": 4000,
+      "image": "img/1795726465560.jpg",
+      "stock": 0,
+      "description": "Es un tratamiento para el contorno de los ojos enfocado en hidratar, suavizar líneas de expresión y refrescar la mirada.",
+      "supplierAvailable": true,
+      "lastChecked": null,
+      "available": true
     }
   ]
 }
