@@ -170,6 +170,22 @@
       "supplierAvailable": true,
       "lastChecked": null,
       "available": true
+    },
+    {
+      "id": "p6595",
+      "supplierId": "6595",
+      "supplierName": "Brow Solution Gel Para Cejas Ruby Rose Tono Dark",
+      "name": "Brow Solution Gel Para Cejas Ruby Rose Tono Dark",
+      "category": "Cejas",
+      "subcategory": "Cejas",
+      "brand": "RubyRose",
+      "price": 22000,
+      "image": "img/1795725286157.jpg",
+      "stock": 0,
+      "description": "Brow Solution es ideal para rellenar y dibujar las cejas con precisión, dejando un acabado más lleno y natural.",
+      "supplierAvailable": true,
+      "lastChecked": null,
+      "available": true
     }
   ]
 }
