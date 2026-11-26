@@ -265,6 +265,22 @@
       "supplierAvailable": true,
       "lastChecked": null,
       "available": true
+    },
+    {
+      "id": "p4763",
+      "supplierId": "4763",
+      "supplierName": "Rubor Jelly Tint Anyeluz",
+      "name": "Rubor Jelly Tint Anyeluz",
+      "category": "RUBORES",
+      "subcategory": "Rostro",
+      "brand": "Anyeluz",
+      "price": 17000,
+      "image": "img/1795730716351.jpg",
+      "stock": 0,
+      "description": "Rubor multifuncional tipo gelatina en formato barra para mejillas, ojos y labios",
+      "supplierAvailable": true,
+      "lastChecked": null,
+      "available": true
     }
   ]
 }
