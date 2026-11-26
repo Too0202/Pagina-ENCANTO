@@ -10,10 +10,10 @@
       "price": 17500,
       "image": "",
       "available": false,
-      "lastChecked": "2026-11-26T15:31:33.573Z",
+      "lastChecked": "2026-11-26T19:30:26.497Z",
       "stock": 0,
       "supplierAvailable": false,
-      "missCount": 42
+      "missCount": 43
     },
     {
       "id": "p439",
@@ -24,7 +24,7 @@
       "price": 20000,
       "image": "",
       "available": true,
-      "lastChecked": "2026-11-26T15:31:33.573Z",
+      "lastChecked": "2026-11-26T19:30:26.497Z",
       "supplierAvailable": true
     },
     {
@@ -36,10 +36,10 @@
       "price": 4000,
       "image": "",
       "available": false,
-      "lastChecked": "2026-11-26T15:31:33.573Z",
+      "lastChecked": "2026-11-26T19:30:26.497Z",
       "stock": 0,
       "supplierAvailable": false,
-      "missCount": 6
+      "missCount": 7
     },
     {
       "id": "p9000",
@@ -50,7 +50,7 @@
       "price": 80000,
       "image": "https://sysvariedades.com.co/sistema/public/images/uploads/products/1783443514_acf212210afb5e5b0d8c.jpg?v=1794500212289",
       "available": true,
-      "lastChecked": "2026-11-26T15:31:33.573Z",
+      "lastChecked": "2026-11-26T19:30:26.497Z",
       "supplierAvailable": true,
       "subcategory": "Acondicionador",
       "brand": "Anyeluz",
@@ -65,7 +65,7 @@
       "price": 45000,
       "image": "https://sysvariedades.com.co/sistema/public/images/uploads/products/8537.jpg?v=1794526766118",
       "available": true,
-      "lastChecked": "2026-11-26T15:31:33.573Z",
+      "lastChecked": "2026-11-26T19:30:26.497Z",
       "supplierAvailable": true
     },
     {
@@ -80,7 +80,7 @@
       "image": "",
       "stock": 5,
       "supplierAvailable": true,
-      "lastChecked": "2026-11-26T15:31:33.573Z",
+      "lastChecked": "2026-11-26T19:30:26.497Z",
       "available": true
     },
     {
@@ -96,7 +96,7 @@
       "stock": 0,
       "description": "Aceite limpiador facial con aceite de macadamia, aceite de jojoba y vitamina E. Al contacto con el agua se transforma en una emulsión lechosa que retira el maquillaje, las impurezas y el protector solar sin dejar sensación grasosa.",
       "supplierAvailable": true,
-      "lastChecked": "2026-11-26T15:31:33.573Z",
+      "lastChecked": "2026-11-26T19:30:26.497Z",
       "available": true
     },
     {
@@ -112,7 +112,7 @@
       "stock": 0,
       "description": "Es un limpiador facial en aceite de 120 ml con extracto de arroz que se emulsiona al contacto con el agua para retirar maquillaje (incluso resistente), protector solar y exceso de grasa sin resecar",
       "supplierAvailable": true,
-      "lastChecked": null,
+      "lastChecked": "2026-11-26T19:30:26.497Z",
       "available": true
     },
     {
@@ -128,7 +128,7 @@
       "stock": 0,
       "description": "Bruma facial de edición limitada que hidrata, calma el enrojecimiento y ayuda a unificar el tono de la piel",
       "supplierAvailable": true,
-      "lastChecked": null,
+      "lastChecked": "2026-11-26T19:30:26.497Z",
       "available": true
     },
     {
@@ -144,7 +144,7 @@
       "stock": 0,
       "description": "Desmaquilla y limpia en un solo paso. Su exclusiva fórmula contiene Arroz morado que humecta, nutre y revitaliza, con Extractos de Bambú que cumplen función antioxidante y antiinflamatoria y Extractos de Lavanda que purifican, regeneran, tonifican y suavizan la piel.",
       "supplierAvailable": true,
-      "lastChecked": null,
+      "lastChecked": "2026-11-26T19:30:26.497Z",
       "available": true,
       "badge": "nuevo"
     },
@@ -160,7 +160,7 @@
       "stock": 0,
       "description": "Es un aceite cosmético hidratante y de textura ligera, formulado para aportar luminosidad inmediata y ayudar a mejorar la apariencia de la piel sin dejar sensación grasosa",
       "supplierAvailable": true,
-      "lastChecked": null,
+      "lastChecked": "2026-11-26T19:30:26.497Z",
       "available": true
     }
   ]
