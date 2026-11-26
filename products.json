@@ -22,11 +22,14 @@
       "supplierName": "Betun De Cejas Brow Effect Montoc Ligth",
       "name": "Betun De Cejas Brow Effect Montoc Ligth",
       "category": "Cejas",
-      "price": 20000,
-      "image": "",
+      "price": 29000,
+      "image": "img/1795721724146.jpg",
       "available": true,
       "lastChecked": "2026-11-26T19:30:26.497Z",
-      "supplierAvailable": true
+      "supplierAvailable": true,
+      "subcategory": "Cejas",
+      "brand": "Montoc",
+      "stock": 0
     },
     {
       "id": "p446",
