@@ -186,6 +186,21 @@
       "supplierAvailable": true,
       "lastChecked": null,
       "available": true
+    },
+    {
+      "id": "p8922",
+      "supplierId": "8922",
+      "supplierName": "Bloom Lamination Bloomshell x 10ml",
+      "name": "Bloom Lamination Bloomshell x 10ml",
+      "category": "Cejas",
+      "subcategory": "Cejas",
+      "brand": "Bloomshel",
+      "price": 22000,
+      "image": "img/1795725645524.jpg",
+      "stock": 0,
+      "supplierAvailable": true,
+      "lastChecked": null,
+      "available": true
     }
   ]
 }
