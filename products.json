@@ -114,6 +114,22 @@
       "supplierAvailable": true,
       "lastChecked": null,
       "available": true
+    },
+    {
+      "id": "p89",
+      "supplierId": "89",
+      "supplierName": "Agua De Rosas Chicas Superpoderosas Ruby Rose",
+      "name": "Agua De Rosas Chicas Superpoderosas Ruby Rose",
+      "category": "SKINCARE",
+      "subcategory": "Rostro",
+      "brand": "RubyRose",
+      "price": 28,
+      "image": "img/1795715605896.jpg",
+      "stock": 0,
+      "description": "Bruma facial de edición limitada que hidrata, calma el enrojecimiento y ayuda a unificar el tono de la piel",
+      "supplierAvailable": true,
+      "lastChecked": null,
+      "available": true
     }
   ]
 }
