@@ -154,6 +154,22 @@
       "supplierAvailable": true,
       "lastChecked": "2026-11-26T19:30:26.497Z",
       "available": true
+    },
+    {
+      "id": "p471",
+      "supplierId": "471",
+      "supplierName": "Bloom Lamination Bloomshell x 5ml",
+      "name": "Bloom Lamination Bloomshell x 5ml",
+      "category": "Cejas",
+      "subcategory": "Cejas",
+      "brand": "Bloomshel",
+      "price": 17000,
+      "image": "img/1795724818640.jpg",
+      "stock": 0,
+      "description": "Gel laminador de cejas en presentación de tubo de 10 ml con cepillo aplicador, formulado con aceite de ricino (Ricinus Communis Seed Oil) para fijar, peinar y dar un efecto laminado diario sin dejar residuos pegajosos",
+      "supplierAvailable": true,
+      "lastChecked": null,
+      "available": true
     }
   ]
 }
