@@ -98,6 +98,22 @@
       "supplierAvailable": true,
       "lastChecked": "2026-11-26T15:31:33.573Z",
       "available": true
+    },
+    {
+      "id": "p18",
+      "supplierId": "18",
+      "supplierName": "Aceite Limpiador Desmaquillante De Arroz Bioaqua 78698",
+      "name": "Aceite Limpiador Desmaquillante De Arroz Bioaqua 78698",
+      "category": "SKINCARE",
+      "subcategory": "Rostro",
+      "brand": "Bioaqua",
+      "price": 17,
+      "image": "img/1795715262931.jpg",
+      "stock": 0,
+      "description": "Es un limpiador facial en aceite de 120 ml con extracto de arroz que se emulsiona al contacto con el agua para retirar maquillaje (incluso resistente), protector solar y exceso de grasa sin resecar",
+      "supplierAvailable": true,
+      "lastChecked": null,
+      "available": true
     }
   ]
 }
