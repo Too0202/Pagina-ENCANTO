@@ -332,6 +332,22 @@
       "supplierAvailable": true,
       "lastChecked": "2026-11-27T20:20:39.784Z",
       "available": true
+    },
+    {
+      "id": "p9",
+      "supplierId": "9",
+      "supplierName": "Aceite Corporal Humectante Girly",
+      "name": "Aceite Corporal Humectante Girly",
+      "category": "CORPORALES",
+      "subcategory": "Aceite",
+      "brand": "Girly",
+      "price": 37000,
+      "image": "img/1795812365855.jpg",
+      "stock": 0,
+      "description": "Aceite corporal humectante con vitamina E, coco y açaí. Se absorbe rápido sin sensación grasosa y deja tu piel luminosa, suave y oliendo delicioso.",
+      "supplierAvailable": true,
+      "lastChecked": null,
+      "available": true
     }
   ]
 }
