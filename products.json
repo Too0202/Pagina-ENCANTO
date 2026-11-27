@@ -428,6 +428,22 @@
       "supplierAvailable": true,
       "lastChecked": null,
       "available": true
+    },
+    {
+      "id": "p8282",
+      "supplierId": "8282",
+      "supplierName": "Aceite Humectante De Almendras Corporal X 120Ml Natural Sant",
+      "name": "Aceite Humectante De Almendras Corporal X 120Ml Natural Sant",
+      "category": "CORPORALES",
+      "subcategory": "Aceite",
+      "brand": "Natural Sant",
+      "price": 15000,
+      "image": "img/1795820462946.jpg",
+      "stock": 0,
+      "description": "El aceite corporal de almendras es especial para masajes corporales relajantes, humecta la piel y contribuye a su cuidado natural gracias a las propiedades antioxidantes de sus extractos.",
+      "supplierAvailable": true,
+      "lastChecked": null,
+      "available": true
     }
   ]
 }
