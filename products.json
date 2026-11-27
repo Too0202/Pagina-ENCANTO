@@ -281,6 +281,22 @@
       "supplierAvailable": true,
       "lastChecked": "2026-11-27T18:33:41.471Z",
       "available": true
+    },
+    {
+      "id": "p8206",
+      "supplierId": "8206",
+      "supplierName": "Shot Vegan Keratin Recamier x 15ml",
+      "name": "Shot Vegan Keratin Recamier x 15ml",
+      "category": "CAPILAR",
+      "subcategory": "Tratamiento",
+      "brand": "Recamier",
+      "price": 15000,
+      "image": "img/1795810021995.jpg",
+      "stock": 0,
+      "description": "El Shot Vegan Keratin & Collagen de Recamier (línea Salon In, presentación de 15 ml) es un tratamiento capilar intensivo diseñado para cabellos extra secos y dañados por procesos químicos, calor o factores ambientales. Su fórmula vegana, no testeada en animales, combina queratina vegetal y colágeno vegetal para nutrir, hidratar y fortalecer la fibra capilar, dejando el cabello más suave, brillante y fácil de peinar.",
+      "supplierAvailable": true,
+      "lastChecked": null,
+      "available": true
     }
   ]
 }
