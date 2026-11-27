@@ -396,6 +396,22 @@
       "supplierAvailable": true,
       "lastChecked": null,
       "available": true
+    },
+    {
+      "id": "p8278",
+      "supplierId": "8278",
+      "supplierName": "Aceite Humectante De Aguacate Corporal X 120Ml Natural Sant",
+      "name": "Aceite Humectante De Aguacate Corporal X 120Ml Natural Sant",
+      "category": "CORPORALES",
+      "subcategory": "Aceite",
+      "brand": "Natural Sant",
+      "price": 15000,
+      "image": "img/1795819917085.jpg",
+      "stock": 0,
+      "description": "El aceite corporal de aguacate es especial para masajes corporales relajantes, humecta la piel y contribuye a su cuidado natural gracias a las propiedades antioxidantes de sus extractos.",
+      "supplierAvailable": true,
+      "lastChecked": null,
+      "available": true
     }
   ]
 }
