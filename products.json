@@ -364,6 +364,22 @@
       "supplierAvailable": true,
       "lastChecked": null,
       "available": true
+    },
+    {
+      "id": "p8275",
+      "supplierId": "8275",
+      "supplierName": "Aceite Humectante Corporal Rosa Mosqueta  X 120Ml Natural Sant",
+      "name": "Aceite Humectante Corporal Rosa Mosqueta  X 120Ml Natural Sant",
+      "category": "CORPORALES",
+      "subcategory": "Aceite",
+      "brand": "Natural Sant",
+      "price": 15000,
+      "image": "img/1795818960027.jpg",
+      "stock": 0,
+      "description": "El aceite corporal de rosa mosqueta es especial para masajes corporales relajantes, humecta la piel y contribuye a su cuidado natural gracias a las propiedades antioxidantes de sus extractos.",
+      "supplierAvailable": true,
+      "lastChecked": null,
+      "available": true
     }
   ]
 }
