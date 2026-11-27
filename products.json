@@ -380,6 +380,22 @@
       "supplierAvailable": true,
       "lastChecked": null,
       "available": true
+    },
+    {
+      "id": "p16",
+      "supplierId": "16",
+      "supplierName": "Aceite Humectante Corporal Rosa Mosqueta X 250Ml Natural Sant",
+      "name": "Aceite Humectante Corporal Rosa Mosqueta X 250Ml Natural Sant",
+      "category": "CORPORALES",
+      "subcategory": "Aceite",
+      "brand": "Natural Sant",
+      "price": 20000,
+      "image": "img/1795819535580.jpg",
+      "stock": 0,
+      "description": "Es un aceite hidratante para el cuerpo diseñado para nutrir la piel, ayudar a prevenir estrías y arrugas, y mejorar la suavidad y elasticidad tras la ducha o en masajes",
+      "supplierAvailable": true,
+      "lastChecked": null,
+      "available": true
     }
   ]
 }
