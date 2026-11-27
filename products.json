@@ -297,6 +297,22 @@
       "supplierAvailable": true,
       "lastChecked": null,
       "available": true
+    },
+    {
+      "id": "p6169",
+      "supplierId": "6169",
+      "supplierName": "Capsulas Desmaquillantes De Arroz Bioaqua 01666",
+      "name": "Capsulas Desmaquillantes De Arroz Bioaqua 01666",
+      "category": "SKINCARE",
+      "subcategory": "Rostro",
+      "brand": "Bioaqua",
+      "price": 16000,
+      "image": "img/1795810347927.jpg",
+      "stock": 0,
+      "description": "Remueven maquillaje resistente al agua, impurezas y exceso de grasa sin necesidad de frotar intensamente, gracias al aceite de arroz, la piel queda suave y tersa,",
+      "supplierAvailable": true,
+      "lastChecked": null,
+      "available": true
     }
   ]
 }
