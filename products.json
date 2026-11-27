@@ -58,7 +58,11 @@
       "image": "https://sysvariedades.com.co/sistema/public/images/uploads/products/8537.jpg?v=1794526766118",
       "available": true,
       "lastChecked": "2026-11-27T20:20:39.784Z",
-      "supplierAvailable": true
+      "supplierAvailable": true,
+      "subcategory": "Aceite",
+      "brand": "Piel De Oro",
+      "stock": 0,
+      "description": "El bronceado perfecto sí existe y nuestro aceite bronceador bronzing te aportará un tono uniforme con tan solo 10 a 15 minutos de exposición al sol."
     },
     {
       "id": "p9324",
