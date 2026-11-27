@@ -313,6 +313,21 @@
       "supplierAvailable": true,
       "lastChecked": null,
       "available": true
+    },
+    {
+      "id": "p8639",
+      "supplierId": "8639",
+      "supplierName": "Crema Facial Fresa Bioaqua BQY48318",
+      "name": "Crema Facial Fresa Bioaqua",
+      "category": "SKINCARE",
+      "brand": "Bioaqua",
+      "price": 14000,
+      "image": "img/1795810696773.jpg",
+      "stock": 0,
+      "description": "Incorpora la Crema de Fresas de Bioaqua en tu rutina diaria de cuidado facial y disfruta de los beneficios de una piel bien hidratada y nutrida. Perfecta para el cuidado diario, es un producto que se adapta a tu estilo de vida y necesidades. Dale a tu piel el cariño que merece con esta exquisita crema que combina eficacia y placer.",
+      "supplierAvailable": true,
+      "lastChecked": null,
+      "available": true
     }
   ]
 }
