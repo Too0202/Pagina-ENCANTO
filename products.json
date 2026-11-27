@@ -348,6 +348,22 @@
       "supplierAvailable": true,
       "lastChecked": "2026-11-27T20:47:09.055Z",
       "available": true
+    },
+    {
+      "id": "p15",
+      "supplierId": "15",
+      "supplierName": "Aceite Humectante Corporal  X 120Ml Natural Sant Coco",
+      "name": "Aceite Humectante Corporal  X 120Ml Natural Sant Coco",
+      "category": "CORPORALES",
+      "subcategory": "Aceite",
+      "brand": "Natural Sant",
+      "price": 15000,
+      "image": "img/1795812580066.jpg",
+      "stock": 0,
+      "description": "El aceite corporal de coco es especial para masajes corporales relajantes, humecta la piel y contribuye a su cuidado natural gracias a las propiedades antioxidantes de sus extractos.",
+      "supplierAvailable": true,
+      "lastChecked": null,
+      "available": true
     }
   ]
 }
